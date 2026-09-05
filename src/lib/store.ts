@@ -1,5 +1,6 @@
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { PrismaClient, Prisma } from "@prisma/client";
 import type { State } from "./types";
 import { createSeed } from "./seed-data";
@@ -63,7 +64,16 @@ export function transaction<T>(fn: (state: State) => T | Promise<T>): Promise<T>
     const result = await fn(state);
     const temporary = file + ".tmp";
     await writeFile(temporary, JSON.stringify(state, null, 2));
-    await rename(temporary, file);
+    // OneDrive e antivírus podem bloquear a substituição por alguns instantes.
+    // Repetimos somente o rename, mantendo a gravação atômica e a mesma operação.
+    for (let attempt = 0; ; attempt++) {
+      try { await rename(temporary, file); break; }
+      catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (process.platform !== "win32" || !["EPERM", "EACCES", "EBUSY"].includes(code || "") || attempt >= 5) throw error;
+        await delay(100 * (attempt + 1));
+      }
+    }
     return result;
   });
   return prisma().$transaction(async tx => {
