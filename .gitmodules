@@ -1,0 +1,3 @@
+[submodule ".claude/skills/threejs"]
+	path = .claude/skills/threejs
+	url = https://github.com/OpenAEC-Foundation/Three.js-Claude-Skill-Package.git

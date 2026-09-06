@@ -1,6 +1,6 @@
 # LogTrack
 
-Rastreamento de lotes via NFC para a logística e o almoxarifado CTMAQ. Aplicação Next.js, TypeScript, Tailwind, NextAuth e Prisma, com modo local de demonstração e schema PostgreSQL para Supabase.
+Rastreamento de lotes via RFID para a logística e o almoxarifado CTMAQ. Aplicação Next.js, TypeScript, Tailwind, NextAuth e Prisma, com modo local de demonstração e schema PostgreSQL para Supabase.
 
 ## Executar no computador
 
@@ -36,14 +36,14 @@ Depois de executar `npm run db:seed`, abra [os links individuais de ativação](
 2. Abra a URL do Celular 2 no aparelho da Zona B — Almoxarifado.
 3. Abra a URL do Celular 3 no aparelho da Zona C — Expedição.
 
-No celular, `localhost` aponta para o próprio aparelho. Para operação NFC física, use a URL HTTPS da aplicação publicada e configure `NEXTAUTH_URL` com essa mesma origem antes de gerar os links. Após a ativação, salve `/estacao` como atalho na tela inicial.
+No celular, `localhost` aponta para o próprio aparelho. Para operação RFID física, use a URL HTTPS da aplicação publicada e configure `NEXTAUTH_URL` com essa mesma origem antes de gerar os links. Após a ativação, salve `/estacao` como atalho na tela inicial.
 
 Novas estações são cadastradas em **Estações → Cadastrar celular**. O link de ativação aparece após salvar. **Regenerar token** invalida os cookies antigos imediatamente; abra o novo link no aparelho. A zona de uma estação é fixa. Para mudar a área, desative a estação e cadastre outra.
 
 ## Fluxo de uso
 
 - **Lotes → Novo lote:** preencha o código, a descrição, a quantidade e a validade. O lote começa Sem Zona.
-- **Gravar etiqueta:** no celular do supervisor, grave a URL em uma etiqueta NFC e cole-a no lote. A confirmação só é salva após a gravação terminar com sucesso.
+- **Gravar etiqueta:** no celular do supervisor, grave a URL em uma etiqueta RFID e cole-a no lote. A confirmação só é salva após a gravação terminar com sucesso.
 - **Leitura na estação:** aproxime a etiqueta do celular ativado. A página registra automaticamente a movimentação e mostra o resultado.
 - **Consulta e auditoria:** use o painel para filtrar lotes, editar cadastros, acompanhar zonas e consultar o histórico completo.
 
@@ -58,9 +58,9 @@ Uma nova abertura ou atualização da página `/l/:id` é uma nova leitura. Pref
 
 A página pública mostra cinco movimentos; o painel mantém todo o histórico. Para excluir um lote, use a lixeira na lista ou **Excluir lote** nos detalhes e confirme. Ele sai do estoque e não pode mais ser editado ou movimentado, mesmo se estava em uma zona; seu histórico e a última localização ficam preservados para consulta. O código do lote continua reservado. Zonas só podem ser desativadas sem lotes ativos associados e sem estações ativas. Eventos de auditoria não são apagados.
 
-## NFC
+## RFID
 
-A gravação usa `NDEFReader.write` com um registro URI, exige uma ação do supervisor e pode ser cancelada. Use Chrome no Android, NFC habilitado e HTTPS. A interface detecta a ausência da API e permite copiar a URL para abrir a tela de gravação em um aparelho compatível. [Documentação do Chrome sobre Web NFC](https://developer.chrome.com/docs/capabilities/nfc).
+A gravação das etiquetas RFID usa a API Web NFC do navegador (`NDEFReader.write`) com um registro URI, exige uma ação do supervisor e pode ser cancelada. Use Chrome no Android, RFID/NFC habilitado e HTTPS. A interface detecta a ausência da API e permite copiar a URL para abrir a tela de gravação em um aparelho compatível. [Documentação do Chrome sobre Web NFC](https://developer.chrome.com/docs/capabilities/nfc).
 
 Os testes automatizados não substituem a validação com etiquetas e celulares físicos.
 

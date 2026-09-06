@@ -6,4 +6,4 @@ export type Supervisor = { id: string; email: string; senhaHash: string; nome: s
 export type ReadResult = { modo: "MOVIMENTO" | "CANCELAMENTO" | "CONSULTA"; mensagem: string; lote: Lote; zona: string; timestamp: string; historico: { id: string; origem: string; destino: string; celular: string; timestamp: string; tipo: string }[] };
 export type Leitura = { id: string; loteId: string; celularId: string | null; modo: string; resultado: ReadResult; timestamp: string };
 export type State = { supervisores: Supervisor[]; zonas: Zona[]; celulares: Celular[]; lotes: Lote[]; movimentacoes: Movimentacao[]; leituras: Leitura[] };
-export type DashboardData = Omit<State, "supervisores" | "celulares" | "leituras"> & { celulares: Omit<Celular, "tokenCookie">[]; totalLeituras: number; demo: boolean };
+export type DashboardData = Omit<State, "supervisores" | "celulares" | "leituras"> & { celulares: Omit<Celular, "tokenCookie">[]; totalLeituras: number };

@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowLeft, PackageOpen } from "lucide-react";
 
-export function PageTitle({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: ReactNode }) {
-  return <div className="page-heading"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="heading-actions">{children}</div></div>;
+export function PageTitle({ title, description, children }: { title: string; description: string; children?: ReactNode }) {
+  return <div className="page-heading"><div><h1>{title}</h1><p>{description}</p></div><div className="heading-actions">{children}</div></div>;
 }
 export function Back({ href = "/lotes", children = "Voltar para lotes" }: { href?: string; children?: ReactNode }) {
   return <Link className="back-link" href={href}><ArrowLeft size={16}/>{children}</Link>;

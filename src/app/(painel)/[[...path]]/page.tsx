@@ -10,8 +10,9 @@ export default async function Page({ params }: { params: Promise<{ path?: string
   const { path = [] } = await params;
   const user = await session();
   if (!user) {
-    if (!path.length && verifyStation((await cookies()).get(stationCookie)?.value)) redirect("/estacao");
-    redirect("/login");
+    if (!path.length) {
+      if (verifyStation((await cookies()).get(stationCookie)?.value)) redirect("/estacao");
+    } else redirect("/login");
   }
   if (path.length && !["lotes", "zonas", "celulares", "ajuda"].includes(path[0])) notFound();
   if (path.length > 3 || (path[0] === "ajuda" && path.length > 1) ||
@@ -21,5 +22,5 @@ export default async function Page({ params }: { params: Promise<{ path?: string
   if (path[1] && path[0] === "zonas" && path[1] !== "nova" && !data.zonas.some(z => z.id === path[1])) notFound();
   if (path[1] && path[0] === "celulares" && path[1] !== "novo" && !data.celulares.some(c => c.id === path[1])) notFound();
   if (path[1] && path[0] === "lotes" && path[1] !== "novo" && !data.lotes.some(l => l.id === path[1])) notFound();
-  return <Shell name={user.user?.name || "Supervisor"} demo={data.demo}><Dashboard key={path.join("/")} initialData={data} path={path}/></Shell>;
+  return <Shell name={user ? user.user?.name || "Supervisor" : null}><Dashboard key={path.join("/")} initialData={data} path={path} authenticated={Boolean(user)}/></Shell>;
 }

@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { isDemo, readState, transaction } from "./store";
+import { readState, transaction } from "./store";
 import { hashToken, newToken, verifyStation } from "./security";
 import { decideMovement } from "./movement";
 import { zoneName } from "./format";
+import { broadcastMovement } from "./realtime";
 export { filterLots } from "./filters";
 import type { DashboardData, ReadResult, State } from "./types";
 export class AppError extends Error { constructor(public status: number, message: string) { super(message); } }
@@ -18,7 +19,7 @@ const lotSchema = z.object({
 });
 export async function dashboard(): Promise<DashboardData> {
   const state = await readState();
-  return { zonas: state.zonas, lotes: state.lotes, movimentacoes: state.movimentacoes.sort((a,b) => b.timestamp.localeCompare(a.timestamp)), celulares: state.celulares.map(({ tokenCookie: _, ...celular }) => celular), totalLeituras: state.leituras.length, demo: Boolean(isDemo()) };
+  return { zonas: state.zonas, lotes: state.lotes, movimentacoes: state.movimentacoes.sort((a,b) => b.timestamp.localeCompare(a.timestamp)), celulares: state.celulares.map(({ tokenCookie: _, ...celular }) => celular), totalLeituras: state.leituras.length };
 }
 export async function mutate(resource: string, id: string | undefined, action: string | undefined, method: string, body: unknown, origin: string) {
   if (id) idSchema.parse(id);
@@ -88,7 +89,8 @@ export function history(state: State, id: string) {
 export async function registerRead(id: string, requestId: string, cookie?: string): Promise<ReadResult> {
   idSchema.parse(id); idSchema.parse(requestId);
   const identity = verifyStation(cookie);
-  return transaction(state => {
+  let movement: { zonaOrigemId: string | null; zonaDestinoId: string | null; tipo: "MOVIMENTO" | "CANCELAMENTO"; timestamp: string } | undefined;
+  const result = await transaction(state => {
     const lote = state.lotes.find(x => x.id === id);
     if (!lote) throw new AppError(404, "Lote não encontrado.");
     const celular = identity ? state.celulares.find(x => x.id === identity.id && x.tokenCookie === identity.tokenHash && x.ativo && state.zonas.some(z => z.id === x.zonaId && z.ativa)) : undefined;
@@ -104,6 +106,7 @@ export async function registerRead(id: string, requestId: string, cookie?: strin
       state.movimentacoes.push({ id: randomUUID(), loteId: id, celularId: celular.id, zonaOrigemId: next.zonaOrigemId, zonaDestinoId: next.zonaDestinoId, tipo: next.tipo, timestamp });
       lote.zonaAtualId = next.zonaDestinoId; lote.ultimoCelularId = celular.id;
       celular.ultimoUso = timestamp; modo = next.tipo;
+      movement = { zonaOrigemId: next.zonaOrigemId, zonaDestinoId: next.zonaDestinoId, tipo: next.tipo, timestamp };
     }
     const zona = zoneName(state.zonas, lote.zonaAtualId);
     const mensagem = modo === "MOVIMENTO" ? "Movido para " + zona : modo === "CANCELAMENTO" ? "Movimentação cancelada — Sem Zona" : lote.arquivado ? "Modo consulta — lote excluído" : "Modo consulta — sem celular vinculado";
@@ -111,4 +114,6 @@ export async function registerRead(id: string, requestId: string, cookie?: strin
     state.leituras.push({ id: requestId, loteId: id, celularId: celular?.id ?? null, modo, resultado: result, timestamp });
     return result;
   });
+  if (movement) await broadcastMovement({ loteId: id, ...movement });
+  return result;
 }
