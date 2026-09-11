@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import useImage from "use-image";
-import { GripVertical, Plus, Radio, Save, Type } from "lucide-react";
+import { GripVertical, MapPin, Plus, Radio, Save, Type } from "lucide-react";
 import type * as ReactKonva from "react-konva";
-import type { MapaData, MapaEstacao, MapaTexto } from "@/lib/mapa-client-types";
+import type { MapaData, MapaEstacao, MapaTexto, MapaZona } from "@/lib/mapa-client-types";
 import type { DashboardData } from "@/lib/types";
 
 const STAGE_W = 900, STAGE_H = 600;
@@ -17,14 +17,18 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
   const [image] = useImage(mapaData.imagemUrl || "");
   const [estacoes, setEstacoes] = useState<MapaEstacao[]>(mapaData.estacoes);
   const [textos, setTextos] = useState<MapaTexto[]>(mapaData.textos);
+  const [zonasMapa, setZonasMapa] = useState<MapaZona[]>(mapaData.zonas);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const loteCounts = new Map(data.zonas.map(z => [z.id, data.lotes.filter(l => !l.arquivado && l.zonaAtualId === z.id).length]));
 
   if (!konva) return <div className="map-panel" style={{ minHeight: STAGE_H }}/>;
-  const { Stage, Layer, Image: KonvaImage, Group, Circle, Label, Tag, Text } = konva;
+  const { Stage, Layer, Image: KonvaImage, Group, Circle, Rect, Label, Tag, Text } = konva;
 
   const placedIds = new Set(estacoes.map(e => e.portalId));
   const unplaced = data.portais.filter(c => !placedIds.has(c.id));
+  const placedZonaIds = new Set(zonasMapa.map(z => z.zonaId));
+  const unplacedZonas = data.zonas.filter(z => !placedZonaIds.has(z.id));
 
   function addEstacao(portalId: string) {
     const portal = data.portais.find(c => c.id === portalId)!;
@@ -46,6 +50,13 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
   function renameTexto(id: string, texto: string) {
     setTextos(prev => prev.map(t => t.id === id ? { ...t, texto } : t));
   }
+  function addZona(zonaId: string) {
+    const zona = data.zonas.find(z => z.id === zonaId)!;
+    setZonasMapa(prev => [...prev, { id: "novo-" + zonaId, zonaId, zonaNome: zona.nome, x: 0.5, y: 0.5 }]);
+  }
+  function moveZona(zonaId: string, x: number, y: number) {
+    setZonasMapa(prev => prev.map(z => z.zonaId === zonaId ? { ...z, x, y } : z));
+  }
 
   async function save() {
     setBusy(true); setError("");
@@ -53,6 +64,7 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
       const body = {
         estacoes: estacoes.map(e => ({ portalId: e.portalId, apelido: e.apelido, x: e.x, y: e.y })),
         textos: textos.map(t => ({ id: t.id.startsWith("novo-") ? undefined : t.id, texto: t.texto, x: t.x, y: t.y })),
+        zonas: zonasMapa.map(z => ({ zonaId: z.zonaId, x: z.x, y: z.y })),
       };
       const response = await fetch("/api/mapa", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const result = await response.json();
@@ -60,6 +72,7 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
       const saved = result as MapaData;
       setEstacoes(saved.estacoes);
       setTextos(saved.textos);
+      setZonasMapa(saved.zonas);
       onSaved();
     } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
@@ -88,6 +101,18 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
         <div><input value={t.texto} onChange={ev => renameTexto(t.id, ev.target.value)}/></div>
       </div>)}
       <button className="el-add" onClick={addTexto}><Plus size={14}/><span>Novo texto</span></button>
+
+      <div className="el-divider"/>
+      <div className="elements-heading">ZONAS (LOTES)</div>
+      {zonasMapa.map(z => <div className="el-item" key={z.zonaId}>
+        <GripVertical className="grip" size={14}/>
+        <span className="el-icon"><MapPin size={12}/></span>
+        <div><strong>{z.zonaNome}</strong><small>{loteCounts.get(z.zonaId) ?? 0} lotes</small></div>
+      </div>)}
+      {unplacedZonas.length > 0 && <div className="elements-heading">NÃO POSICIONADAS</div>}
+      {unplacedZonas.map(z => <button key={z.id} className="el-add" onClick={() => addZona(z.id)}>
+        <Plus size={14}/><span>{z.nome}</span>
+      </button>)}
     </div>
 
     <div className="map-panel">
@@ -108,6 +133,12 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
             <Tag fill="rgba(14,18,24,0.8)" cornerRadius={4}/>
             <Text text={t.texto} fontSize={11} fill="#e8ebf2" padding={5}/>
           </Label>)}
+          {zonasMapa.map(z => <Group key={z.zonaId} x={z.x * STAGE_W} y={z.y * STAGE_H} draggable
+            onDragEnd={ev => moveZona(z.zonaId, ev.target.x() / STAGE_W, ev.target.y() / STAGE_H)}>
+            <Rect x={-60} y={-24} width={120} height={48} fill="rgba(22,27,35,0.9)" stroke="#2c3546" cornerRadius={6}/>
+            <Text text={z.zonaNome.toUpperCase()} fontSize={8} fill="#8b96ab" x={-52} y={-17} width={104}/>
+            <Text text={String(loteCounts.get(z.zonaId) ?? 0) + " lotes"} fontSize={15} fill="#e8ebf2" x={-52} y={-4} width={104}/>
+          </Group>)}
         </Layer>
       </Stage>
     </div>

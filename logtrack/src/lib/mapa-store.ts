@@ -12,6 +12,7 @@ export async function getMapa(): Promise<MapaData | null> {
     include: {
       estacoes: { include: { portal: { include: { zona: true } } } },
       textos: true,
+      zonas: { include: { zona: true } },
     },
   });
   if (!mapa) return null;
@@ -25,6 +26,7 @@ export async function getMapa(): Promise<MapaData | null> {
       apelido: e.apelido, x: e.x, y: e.y,
     })),
     textos: mapa.textos.map(t => ({ id: t.id, texto: t.texto, x: t.x, y: t.y })),
+    zonas: mapa.zonas.map(z => ({ id: z.id, zonaId: z.zonaId, zonaNome: z.zona.nome, x: z.x, y: z.y })),
   };
 }
 
@@ -73,6 +75,11 @@ export async function updateMapa(input: MapaUpdateInput): Promise<MapaData> {
     })),
     ...input.textos.filter(t => !t.id).map(t => prisma().textoMapa.create({
       data: { mapaId: mapa.id, texto: t.texto, x: clampNormalized(t.x), y: clampNormalized(t.y) },
+    })),
+    ...input.zonas.map(z => prisma().zonaMapa.upsert({
+      where: { mapaId_zonaId: { mapaId: mapa.id, zonaId: z.zonaId } },
+      create: { mapaId: mapa.id, zonaId: z.zonaId, x: clampNormalized(z.x), y: clampNormalized(z.y) },
+      update: { x: clampNormalized(z.x), y: clampNormalized(z.y) },
     })),
   ]);
   return (await getMapa())!;

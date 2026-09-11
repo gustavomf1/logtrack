@@ -24,6 +24,7 @@ model Zona {
   lotes Lote[]
   origens Movimentacao[] @relation("origem")
   destinos Movimentacao[] @relation("destino")
+  zonasMapa ZonaMapa[]
   @@map("zonas")
 }
 model Portal {
@@ -98,6 +99,7 @@ model Mapa {
   atualizadoEm DateTime      @updatedAt @map("atualizado_em")
   estacoes     EstacaoMapa[]
   textos       TextoMapa[]
+  zonas        ZonaMapa[]
   @@map("mapas")
 }
 model EstacaoMapa {
@@ -124,4 +126,16 @@ model TextoMapa {
   criadoEm DateTime @default(now()) @map("criado_em")
   @@index([mapaId])
   @@map("textos_mapa")
+}
+model ZonaMapa {
+  id       String   @id @default(uuid()) @db.Uuid
+  mapaId   String   @db.Uuid @map("mapa_id")
+  mapa     Mapa     @relation(fields:[mapaId], references:[id], onDelete:Cascade)
+  zonaId   String   @db.Uuid @map("zona_id")
+  zona     Zona     @relation(fields:[zonaId], references:[id], onDelete:Cascade)
+  x        Float
+  y        Float
+  criadoEm DateTime @default(now()) @map("criado_em")
+  @@unique([mapaId, zonaId])
+  @@map("zonas_mapa")
 }

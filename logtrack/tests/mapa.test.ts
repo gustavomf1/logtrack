@@ -13,6 +13,7 @@ test("mapaUpdateInput aceita um payload válido", () => {
   const result = mapaUpdateInput.parse({
     estacoes: [{ portalId: "11111111-1111-1111-1111-111111111111", apelido: "Entrada Principal", x: 0.5, y: 0.86 }],
     textos: [{ texto: "Escritório", x: 0.21, y: 0.67 }],
+    zonas: [{ zonaId: "22222222-2222-2222-2222-222222222222", x: 0.3, y: 0.4 }],
   });
   assert.equal(result.estacoes[0].apelido, "Entrada Principal");
   assert.equal(result.textos[0].texto, "Escritório");
@@ -22,6 +23,7 @@ test("mapaUpdateInput rejeita coordenadas fora de 0..1", () => {
   assert.throws(() => mapaUpdateInput.parse({
     estacoes: [{ portalId: "11111111-1111-1111-1111-111111111111", x: 1.5, y: 0.2 }],
     textos: [],
+    zonas: [],
   }));
 });
 
@@ -29,6 +31,7 @@ test("mapaUpdateInput normaliza apelido em branco para null", () => {
   const result = mapaUpdateInput.parse({
     estacoes: [{ portalId: "11111111-1111-1111-1111-111111111111", apelido: "   ", x: 0.1, y: 0.1 }],
     textos: [],
+    zonas: [],
   });
   assert.equal(result.estacoes[0].apelido, null);
 });

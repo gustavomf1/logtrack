@@ -35,12 +35,15 @@ export function OperationalView({ mapaData, data }: { mapaData: MapaData; data: 
     <div className="live-indicator"><span className="live-dot"/>ATUALIZADO {highlight ? "AGORA" : "—"}</div>
     <div className="plan-frame">
       {mapaData.imagemUrl && <img src={mapaData.imagemUrl} alt={mapaData.nome}/>}
-      {[...new Set(mapaData.estacoes.map(e => e.zonaId))].map(zonaId => {
+      {[...new Set([...mapaData.zonas.map(z => z.zonaId), ...mapaData.estacoes.map(e => e.zonaId)])].map(zonaId => {
         const zona = data.zonas.find(z => z.id === zonaId);
         if (!zona) return null;
+        const placed = mapaData.zonas.find(z => z.zonaId === zonaId);
         const anchor = mapaData.estacoes.find(e => e.zonaId === zonaId);
-        if (!anchor) return null;
-        return <div key={zonaId} className={"map-zone-card" + (highlight?.zonaId === zonaId ? " highlight" : "")} style={{ left: (anchor.x * 100) + "%", top: (Math.max(anchor.y - 0.12, 0.03) * 100) + "%" }}>
+        const x = placed ? placed.x : anchor?.x;
+        const y = placed ? placed.y : anchor !== undefined ? Math.max(anchor.y - 0.12, 0.03) : undefined;
+        if (x === undefined || y === undefined) return null;
+        return <div key={zonaId} className={"map-zone-card" + (highlight?.zonaId === zonaId ? " highlight" : "")} style={{ left: (x * 100) + "%", top: (y * 100) + "%" }}>
           <span>{zona.nome.toUpperCase()}</span>
           <strong>{loteCounts.get(zonaId) ?? 0}<small>lotes</small></strong>
         </div>;

@@ -17,8 +17,14 @@ export const textoMapaInput = z.object({
   x: coordSchema,
   y: coordSchema,
 });
+export const zonaMapaInput = z.object({
+  zonaId: idSchema,
+  x: coordSchema,
+  y: coordSchema,
+});
 export const mapaUpdateInput = z.object({
   estacoes: z.array(estacaoMapaInput).max(200),
   textos: z.array(textoMapaInput).max(200),
+  zonas: z.array(zonaMapaInput).max(200),
 });
 export type MapaUpdateInput = z.infer<typeof mapaUpdateInput>;
