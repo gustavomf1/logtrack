@@ -40,7 +40,7 @@ export function OperationalView({ mapaData, data }: { mapaData: MapaData; data: 
         if (!zona) return null;
         const anchor = mapaData.estacoes.find(e => e.zonaId === zonaId);
         if (!anchor) return null;
-        return <div key={zonaId} className={"zone-card" + (highlight?.zonaId === zonaId ? " highlight" : "")} style={{ left: (anchor.x * 100) + "%", top: (Math.max(anchor.y - 0.12, 0.03) * 100) + "%" }}>
+        return <div key={zonaId} className={"map-zone-card" + (highlight?.zonaId === zonaId ? " highlight" : "")} style={{ left: (anchor.x * 100) + "%", top: (Math.max(anchor.y - 0.12, 0.03) * 100) + "%" }}>
           <span>{zona.nome.toUpperCase()}</span>
           <strong>{loteCounts.get(zonaId) ?? 0}<small>lotes</small></strong>
         </div>;

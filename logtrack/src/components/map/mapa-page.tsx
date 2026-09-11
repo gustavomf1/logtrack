@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PageTitle, Empty } from "../ui";
+import { PageTitle } from "../ui";
 import type { DashboardData } from "@/lib/types";
 import type { MapaData } from "@/lib/mapa-client-types";
 import { OperationalView } from "./operational-view";
