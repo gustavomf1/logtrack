@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { AppError } from "./service";
 import { clampNormalized, type MapaUpdateInput } from "./mapa";
 import type { MapaData } from "./mapa-client-types";
@@ -29,19 +31,29 @@ export async function getMapa(): Promise<MapaData | null> {
 export async function uploadPlanta(file: File) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new AppError(500, "Armazenamento de imagens não configurado.");
-  const supabase = createClient(url, key);
-  const bucket = process.env.SUPABASE_STORAGE_BUCKET || "plantas";
   const ext = file.type === "image/png" ? "png" : "jpg";
-  const path = "mapa-" + Date.now() + "." + ext;
+  const filename = "mapa-" + Date.now() + "." + ext;
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const { error } = await supabase.storage.from(bucket).upload(path, bytes, { contentType: file.type, upsert: true });
-  if (error) throw new AppError(500, "Falha ao enviar a imagem: " + error.message);
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  let imagemUrl: string;
+  if (url && key) {
+    const supabase = createClient(url, key);
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET || "plantas";
+    const { error } = await supabase.storage.from(bucket).upload(filename, bytes, { contentType: file.type, upsert: true });
+    if (error) throw new AppError(500, "Falha ao enviar a imagem: " + error.message);
+    imagemUrl = supabase.storage.from(bucket).getPublicUrl(filename).data.publicUrl;
+  } else if (process.env.NODE_ENV !== "production") {
+    // Fallback local de desenvolvimento: sem Supabase configurado, salva em public/uploads.
+    const dir = path.join(process.cwd(), "public", "uploads");
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, filename), bytes);
+    imagemUrl = "/uploads/" + filename;
+  } else {
+    throw new AppError(500, "Armazenamento de imagens não configurado.");
+  }
   const existing = await prisma().mapa.findFirst({ orderBy: { criadoEm: "asc" } });
   const mapa = existing
-    ? await prisma().mapa.update({ where: { id: existing.id }, data: { imagemUrl: data.publicUrl } })
-    : await prisma().mapa.create({ data: { nome: "Mapa da empresa", imagemUrl: data.publicUrl } });
+    ? await prisma().mapa.update({ where: { id: existing.id }, data: { imagemUrl } })
+    : await prisma().mapa.create({ data: { nome: "Mapa da empresa", imagemUrl } });
   return { id: mapa.id, imagemUrl: mapa.imagemUrl };
 }
 

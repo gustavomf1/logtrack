@@ -1,26 +1,27 @@
 "use client";
-import { useState } from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import useImage from "use-image";
 import { GripVertical, Plus, Radio, Save, Type } from "lucide-react";
+import type * as ReactKonva from "react-konva";
 import type { MapaData, MapaEstacao, MapaTexto } from "@/lib/mapa-client-types";
 import type { DashboardData } from "@/lib/types";
 
-const Stage = dynamic(() => import("react-konva").then(m => m.Stage), { ssr: false });
-const Layer = dynamic(() => import("react-konva").then(m => m.Layer), { ssr: false });
-const KonvaImage = dynamic(() => import("react-konva").then(m => m.Image), { ssr: false });
-const Group = dynamic(() => import("react-konva").then(m => m.Group), { ssr: false });
-const Circle = dynamic(() => import("react-konva").then(m => m.Circle), { ssr: false });
-const Text = dynamic(() => import("react-konva").then(m => m.Text), { ssr: false });
-
 const STAGE_W = 900, STAGE_H = 600;
 
+// Carregado via useEffect (em vez de next/dynamic por export) porque o Turbopack
+// resolve mal os exports nomeados do react-konva através de next/dynamic,
+// deixando m.Layer etc. como a string do nome em vez do componente.
 export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; data: DashboardData; onSaved: () => void }) {
+  const [konva, setKonva] = useState<typeof ReactKonva | null>(null);
+  useEffect(() => { import("react-konva").then(setKonva); }, []);
   const [image] = useImage(mapaData.imagemUrl || "");
   const [estacoes, setEstacoes] = useState<MapaEstacao[]>(mapaData.estacoes);
   const [textos, setTextos] = useState<MapaTexto[]>(mapaData.textos);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  if (!konva) return <div className="map-panel" style={{ minHeight: STAGE_H }}/>;
+  const { Stage, Layer, Image: KonvaImage, Group, Circle, Label, Tag, Text } = konva;
 
   const placedIds = new Set(estacoes.map(e => e.celularId));
   const unplaced = data.celulares.filter(c => !placedIds.has(c.id));
@@ -97,11 +98,16 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
           {estacoes.map(e => <Group key={e.celularId} x={e.x * STAGE_W} y={e.y * STAGE_H} draggable
             onDragEnd={ev => moveEstacao(e.celularId, ev.target.x() / STAGE_W, ev.target.y() / STAGE_H)}>
             <Circle radius={15} fill="#1f2733" stroke="#2c3546"/>
-            <Text text={e.apelido || e.celularNome} fontSize={10} fill="#c9cede" y={18} offsetX={-(-20)} align="center" width={100} x={-50}/>
+            <Label x={-50} y={12} width={100} align="center">
+              <Tag fill="rgba(14,18,24,0.8)" cornerRadius={3}/>
+              <Text text={e.apelido || e.celularNome} fontSize={10} fill="#e8ebf2" padding={3} align="center" width={100}/>
+            </Label>
           </Group>)}
-          {textos.map(t => <Text key={t.id} x={t.x * STAGE_W} y={t.y * STAGE_H} text={t.texto} fontSize={11}
-            fill="#c9cede" draggable
-            onDragEnd={ev => moveTexto(t.id, ev.target.x() / STAGE_W, ev.target.y() / STAGE_H)}/>)}
+          {textos.map(t => <Label key={t.id} x={t.x * STAGE_W} y={t.y * STAGE_H} draggable
+            onDragEnd={ev => moveTexto(t.id, ev.target.x() / STAGE_W, ev.target.y() / STAGE_H)}>
+            <Tag fill="rgba(14,18,24,0.8)" cornerRadius={4}/>
+            <Text text={t.texto} fontSize={11} fill="#e8ebf2" padding={5}/>
+          </Label>)}
         </Layer>
       </Stage>
     </div>
