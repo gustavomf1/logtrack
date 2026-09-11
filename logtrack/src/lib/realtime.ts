@@ -4,6 +4,7 @@ export type MovementEvent = {
   loteId: string;
   zonaOrigemId: string | null;
   zonaDestinoId: string | null;
+  celularId: string;
   tipo: "MOVIMENTO" | "CANCELAMENTO";
   timestamp: string;
 };

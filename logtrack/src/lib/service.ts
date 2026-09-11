@@ -89,7 +89,7 @@ export function history(state: State, id: string) {
 export async function registerRead(id: string, requestId: string, cookie?: string): Promise<ReadResult> {
   idSchema.parse(id); idSchema.parse(requestId);
   const identity = verifyStation(cookie);
-  let movement: { zonaOrigemId: string | null; zonaDestinoId: string | null; tipo: "MOVIMENTO" | "CANCELAMENTO"; timestamp: string } | undefined;
+  let movement: { zonaOrigemId: string | null; zonaDestinoId: string | null; celularId: string; tipo: "MOVIMENTO" | "CANCELAMENTO"; timestamp: string } | undefined;
   const result = await transaction(state => {
     const lote = state.lotes.find(x => x.id === id);
     if (!lote) throw new AppError(404, "Lote não encontrado.");
@@ -106,7 +106,7 @@ export async function registerRead(id: string, requestId: string, cookie?: strin
       state.movimentacoes.push({ id: randomUUID(), loteId: id, celularId: celular.id, zonaOrigemId: next.zonaOrigemId, zonaDestinoId: next.zonaDestinoId, tipo: next.tipo, timestamp });
       lote.zonaAtualId = next.zonaDestinoId; lote.ultimoCelularId = celular.id;
       celular.ultimoUso = timestamp; modo = next.tipo;
-      movement = { zonaOrigemId: next.zonaOrigemId, zonaDestinoId: next.zonaDestinoId, tipo: next.tipo, timestamp };
+      movement = { zonaOrigemId: next.zonaOrigemId, zonaDestinoId: next.zonaDestinoId, celularId: celular.id, tipo: next.tipo, timestamp };
     }
     const zona = zoneName(state.zonas, lote.zonaAtualId);
     const mensagem = modo === "MOVIMENTO" ? "Movido para " + zona : modo === "CANCELAMENTO" ? "Movimentação cancelada — Sem Zona" : lote.arquivado ? "Modo consulta — lote excluído" : "Modo consulta — sem celular vinculado";
