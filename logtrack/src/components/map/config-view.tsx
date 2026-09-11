@@ -23,19 +23,19 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
   if (!konva) return <div className="map-panel" style={{ minHeight: STAGE_H }}/>;
   const { Stage, Layer, Image: KonvaImage, Group, Circle, Label, Tag, Text } = konva;
 
-  const placedIds = new Set(estacoes.map(e => e.celularId));
-  const unplaced = data.celulares.filter(c => !placedIds.has(c.id));
+  const placedIds = new Set(estacoes.map(e => e.portalId));
+  const unplaced = data.portais.filter(c => !placedIds.has(c.id));
 
-  function addEstacao(celularId: string) {
-    const celular = data.celulares.find(c => c.id === celularId)!;
-    const zona = data.zonas.find(z => z.id === celular.zonaId);
-    setEstacoes(prev => [...prev, { id: "novo-" + celularId, celularId, celularNome: celular.nome, zonaId: celular.zonaId, zonaNome: zona?.nome || "", apelido: null, x: 0.5, y: 0.5 }]);
+  function addEstacao(portalId: string) {
+    const portal = data.portais.find(c => c.id === portalId)!;
+    const zona = data.zonas.find(z => z.id === portal.zonaId);
+    setEstacoes(prev => [...prev, { id: "novo-" + portalId, portalId, portalNome: portal.nome, zonaId: portal.zonaId, zonaNome: zona?.nome || "", apelido: null, x: 0.5, y: 0.5 }]);
   }
-  function moveEstacao(celularId: string, x: number, y: number) {
-    setEstacoes(prev => prev.map(e => e.celularId === celularId ? { ...e, x, y } : e));
+  function moveEstacao(portalId: string, x: number, y: number) {
+    setEstacoes(prev => prev.map(e => e.portalId === portalId ? { ...e, x, y } : e));
   }
-  function renameEstacao(celularId: string, apelido: string) {
-    setEstacoes(prev => prev.map(e => e.celularId === celularId ? { ...e, apelido: apelido || null } : e));
+  function renameEstacao(portalId: string, apelido: string) {
+    setEstacoes(prev => prev.map(e => e.portalId === portalId ? { ...e, apelido: apelido || null } : e));
   }
   function addTexto() {
     setTextos(prev => [...prev, { id: "novo-" + Date.now(), texto: "Novo texto", x: 0.5, y: 0.5 }]);
@@ -51,7 +51,7 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
     setBusy(true); setError("");
     try {
       const body = {
-        estacoes: estacoes.map(e => ({ celularId: e.celularId, apelido: e.apelido, x: e.x, y: e.y })),
+        estacoes: estacoes.map(e => ({ portalId: e.portalId, apelido: e.apelido, x: e.x, y: e.y })),
         textos: textos.map(t => ({ id: t.id.startsWith("novo-") ? undefined : t.id, texto: t.texto, x: t.x, y: t.y })),
       };
       const response = await fetch("/api/mapa", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -67,12 +67,12 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
   return <div className="workspace-row">
     <div className="elements-panel">
       <div className="elements-heading">PORTAIS RFID</div>
-      {estacoes.map(e => <div className="el-item" key={e.celularId}>
+      {estacoes.map(e => <div className="el-item" key={e.portalId}>
         <GripVertical className="grip" size={14}/>
         <span className="el-icon"><Radio size={12}/></span>
         <div>
-          <input value={e.apelido || ""} placeholder={e.celularNome} onChange={ev => renameEstacao(e.celularId, ev.target.value)}/>
-          <small>{e.celularNome} · Zona: {e.zonaNome}</small>
+          <input value={e.apelido || ""} placeholder={e.portalNome} onChange={ev => renameEstacao(e.portalId, ev.target.value)}/>
+          <small>{e.portalNome} · Zona: {e.zonaNome}</small>
         </div>
       </div>)}
       {unplaced.length > 0 && <div className="elements-heading">NÃO POSICIONADAS</div>}
@@ -95,12 +95,12 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
       <Stage width={STAGE_W} height={STAGE_H} style={{ background: "#0e1218", borderRadius: 4 }}>
         <Layer>
           {image && <KonvaImage image={image} width={STAGE_W} height={STAGE_H}/>}
-          {estacoes.map(e => <Group key={e.celularId} x={e.x * STAGE_W} y={e.y * STAGE_H} draggable
-            onDragEnd={ev => moveEstacao(e.celularId, ev.target.x() / STAGE_W, ev.target.y() / STAGE_H)}>
+          {estacoes.map(e => <Group key={e.portalId} x={e.x * STAGE_W} y={e.y * STAGE_H} draggable
+            onDragEnd={ev => moveEstacao(e.portalId, ev.target.x() / STAGE_W, ev.target.y() / STAGE_H)}>
             <Circle radius={15} fill="#1f2733" stroke="#2c3546"/>
             <Label x={-50} y={12} width={100} align="center">
               <Tag fill="rgba(14,18,24,0.8)" cornerRadius={3}/>
-              <Text text={e.apelido || e.celularNome} fontSize={10} fill="#e8ebf2" padding={3} align="center" width={100}/>
+              <Text text={e.apelido || e.portalNome} fontSize={10} fill="#e8ebf2" padding={3} align="center" width={100}/>
             </Label>
           </Group>)}
           {textos.map(t => <Label key={t.id} x={t.x * STAGE_W} y={t.y * STAGE_H} draggable

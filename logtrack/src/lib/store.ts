@@ -22,10 +22,10 @@ async function loadDemo(): Promise<State> {
   }
 }
 async function loadDb(tx: Prisma.TransactionClient): Promise<State> {
-  const [supervisores, zonas, celulares, lotes, movimentacoes, leituras] = await Promise.all([
-    tx.supervisor.findMany(), tx.zona.findMany(), tx.celular.findMany(), tx.lote.findMany(), tx.movimentacao.findMany({ orderBy: { timestamp: "desc" } }), tx.leitura.findMany(),
+  const [supervisores, zonas, portais, lotes, movimentacoes, leituras] = await Promise.all([
+    tx.supervisor.findMany(), tx.zona.findMany(), tx.portal.findMany(), tx.lote.findMany(), tx.movimentacao.findMany({ orderBy: { timestamp: "desc" } }), tx.leitura.findMany(),
   ]);
-  return JSON.parse(JSON.stringify({ supervisores, zonas, celulares, lotes, movimentacoes, leituras }));
+  return JSON.parse(JSON.stringify({ supervisores, zonas, portais, lotes, movimentacoes, leituras }));
 }
 async function persistDb(tx: Prisma.TransactionClient, before: State, after: State) {
   for (const item of after.zonas) {
@@ -33,10 +33,10 @@ async function persistDb(tx: Prisma.TransactionClient, before: State, after: Sta
     if (!old) await tx.zona.create({ data: item });
     else if (JSON.stringify(old) !== JSON.stringify(item)) await tx.zona.update({ where: { id: item.id }, data: item });
   }
-  for (const item of after.celulares) {
-    const old = before.celulares.find(x => x.id === item.id);
-    if (!old) await tx.celular.create({ data: item });
-    else if (JSON.stringify(old) !== JSON.stringify(item)) await tx.celular.update({ where: { id: item.id }, data: item });
+  for (const item of after.portais) {
+    const old = before.portais.find(x => x.id === item.id);
+    if (!old) await tx.portal.create({ data: item });
+    else if (JSON.stringify(old) !== JSON.stringify(item)) await tx.portal.update({ where: { id: item.id }, data: item });
   }
   for (const item of after.lotes) {
     const data = { ...item, dataValidade: item.dataValidade ? new Date(item.dataValidade) : null };

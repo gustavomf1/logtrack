@@ -8,7 +8,7 @@ import type { MapaData } from "@/lib/mapa-client-types";
 import type { DashboardData } from "@/lib/types";
 
 export function OperationalView({ mapaData, data }: { mapaData: MapaData; data: DashboardData }) {
-  const [highlight, setHighlight] = useState<{ celularId: string; zonaId: string | null } | null>(null);
+  const [highlight, setHighlight] = useState<{ portalId: string; zonaId: string | null } | null>(null);
   const router = useRouter();
   const mapaRef = useRef(mapaData);
   useEffect(() => { mapaRef.current = mapaData; }, [mapaData]);
@@ -20,8 +20,8 @@ export function OperationalView({ mapaData, data }: { mapaData: MapaData; data: 
     const supabase = createClient(url, key);
     const channel = supabase.channel(MOVEMENT_CHANNEL);
     channel.on("broadcast", { event: "movement" }, ({ payload }: { payload: MovementEvent }) => {
-      if (!mapaRef.current.estacoes.some(e => e.celularId === payload.celularId)) return;
-      setHighlight({ celularId: payload.celularId, zonaId: payload.zonaDestinoId });
+      if (!mapaRef.current.estacoes.some(e => e.portalId === payload.portalId)) return;
+      setHighlight({ portalId: payload.portalId, zonaId: payload.zonaDestinoId });
       setTimeout(() => setHighlight(null), 5000);
       router.refresh();
     }).subscribe();
@@ -46,7 +46,7 @@ export function OperationalView({ mapaData, data }: { mapaData: MapaData; data: 
         </div>;
       })}
       {mapaData.textos.map(t => <div key={t.id} className="text-label" style={{ left: (t.x * 100) + "%", top: (t.y * 100) + "%" }}>{t.texto}</div>)}
-      {mapaData.estacoes.map(e => <div key={e.id} className={"portal" + (highlight?.celularId === e.celularId ? " highlight" : "")} style={{ left: (e.x * 100) + "%", top: (e.y * 100) + "%" }}>
+      {mapaData.estacoes.map(e => <div key={e.id} className={"portal" + (highlight?.portalId === e.portalId ? " highlight" : "")} style={{ left: (e.x * 100) + "%", top: (e.y * 100) + "%" }}>
         <Radio size={15}/>
       </div>)}
     </div>

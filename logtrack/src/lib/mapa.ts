@@ -6,7 +6,7 @@ export function clampNormalized(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 export const estacaoMapaInput = z.object({
-  celularId: idSchema,
+  portalId: idSchema,
   apelido: z.string().trim().max(100).nullable().optional().transform(v => v || null),
   x: coordSchema,
   y: coordSchema,

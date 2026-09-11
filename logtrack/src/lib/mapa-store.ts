@@ -10,7 +10,7 @@ export async function getMapa(): Promise<MapaData | null> {
   const mapa = await prisma().mapa.findFirst({
     orderBy: { criadoEm: "asc" },
     include: {
-      estacoes: { include: { celular: { include: { zona: true } } } },
+      estacoes: { include: { portal: { include: { zona: true } } } },
       textos: true,
     },
   });
@@ -20,8 +20,8 @@ export async function getMapa(): Promise<MapaData | null> {
     nome: mapa.nome,
     imagemUrl: mapa.imagemUrl,
     estacoes: mapa.estacoes.map(e => ({
-      id: e.id, celularId: e.celularId, celularNome: e.celular.nome,
-      zonaId: e.celular.zonaId, zonaNome: e.celular.zona.nome,
+      id: e.id, portalId: e.portalId, portalNome: e.portal.nome,
+      zonaId: e.portal.zonaId, zonaNome: e.portal.zona.nome,
       apelido: e.apelido, x: e.x, y: e.y,
     })),
     textos: mapa.textos.map(t => ({ id: t.id, texto: t.texto, x: t.x, y: t.y })),
@@ -63,8 +63,8 @@ export async function updateMapa(input: MapaUpdateInput): Promise<MapaData> {
   const keepIds = input.textos.filter(t => t.id).map(t => t.id!);
   await prisma().$transaction([
     ...input.estacoes.map(e => prisma().estacaoMapa.upsert({
-      where: { mapaId_celularId: { mapaId: mapa.id, celularId: e.celularId } },
-      create: { mapaId: mapa.id, celularId: e.celularId, apelido: e.apelido, x: clampNormalized(e.x), y: clampNormalized(e.y) },
+      where: { mapaId_portalId: { mapaId: mapa.id, portalId: e.portalId } },
+      create: { mapaId: mapa.id, portalId: e.portalId, apelido: e.apelido, x: clampNormalized(e.x), y: clampNormalized(e.y) },
       update: { apelido: e.apelido, x: clampNormalized(e.x), y: clampNormalized(e.y) },
     })),
     prisma().textoMapa.deleteMany({ where: { mapaId: mapa.id, id: { notIn: keepIds.length ? keepIds : ["00000000-0000-0000-0000-000000000000"] } } }),

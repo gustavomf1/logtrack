@@ -24,11 +24,11 @@ test("supervisor cadastra, estação movimenta e cancela, consulta preserva esta
   await page.goto("/lotes");
   await page.getByLabel("Buscar lotes").fill("E2E-LOTE");
   await expect(page.locator("tbody tr")).toHaveCount(1);
-  await page.goto("/celulares/novo");
-  await page.getByLabel("Nome do celular").fill("Estação de teste");
+  await page.goto("/portais/novo");
+  await page.getByLabel("Nome do portal").fill("Estação de teste");
   await page.getByLabel("Zona vinculada").selectOption({ index: 1 });
   await page.getByRole("button", { name: "Cadastrar e gerar link" }).click();
-  await expect(page.getByRole("heading", { name: "Celular cadastrado" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Portal cadastrado" })).toBeVisible();
   const activation = await page.getByLabel("URL para copiar").inputValue();
   const stationContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const station = await stationContext.newPage();
@@ -47,7 +47,7 @@ test("supervisor cadastra, estação movimenta e cancela, consulta preserva esta
   const visitor = await browser.newContext();
   const consultation = await visitor.newPage();
   await consultation.goto("http://localhost:3100/l/" + lotId);
-  await expect(consultation.getByRole("status")).toContainText("Modo consulta — sem celular vinculado");
+  await expect(consultation.getByRole("status")).toContainText("Modo consulta — sem portal vinculado");
   await expect(consultation.locator(".history-entry")).toHaveCount(2);
   const forbidden = await visitor.request.post("http://localhost:3100/api/zonas", { headers: { Origin: "http://localhost:3100" }, data: { nome: "Não autorizado" } });
   expect(forbidden.status()).toBe(401);
@@ -77,7 +77,7 @@ test("supervisor cadastra, estação movimenta e cancela, consulta preserva esta
   await expect(page.getByText("Lote excluído do estoque. Seu histórico continua disponível para consulta.")).toBeVisible();
   await expect(page.locator("tbody tr")).toHaveCount(3);
   await expect(page.getByRole("button", { name: "Excluir lote E2E-LOTE", exact: true })).toHaveCount(0);
-  await page.goto("/celulares");
+  await page.goto("/portais");
   const row = page.getByRole("row").filter({ hasText: "Estação de teste" });
   await row.getByRole("button", { name: "Desativar", exact: true }).click();
   await expect(row.getByText("Inativa", { exact: true })).toBeVisible();

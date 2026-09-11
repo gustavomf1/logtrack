@@ -11,7 +11,7 @@ test("clampNormalized mantém valores dentro de 0 e 1", () => {
 
 test("mapaUpdateInput aceita um payload válido", () => {
   const result = mapaUpdateInput.parse({
-    estacoes: [{ celularId: "11111111-1111-1111-1111-111111111111", apelido: "Entrada Principal", x: 0.5, y: 0.86 }],
+    estacoes: [{ portalId: "11111111-1111-1111-1111-111111111111", apelido: "Entrada Principal", x: 0.5, y: 0.86 }],
     textos: [{ texto: "Escritório", x: 0.21, y: 0.67 }],
   });
   assert.equal(result.estacoes[0].apelido, "Entrada Principal");
@@ -20,14 +20,14 @@ test("mapaUpdateInput aceita um payload válido", () => {
 
 test("mapaUpdateInput rejeita coordenadas fora de 0..1", () => {
   assert.throws(() => mapaUpdateInput.parse({
-    estacoes: [{ celularId: "11111111-1111-1111-1111-111111111111", x: 1.5, y: 0.2 }],
+    estacoes: [{ portalId: "11111111-1111-1111-1111-111111111111", x: 1.5, y: 0.2 }],
     textos: [],
   }));
 });
 
 test("mapaUpdateInput normaliza apelido em branco para null", () => {
   const result = mapaUpdateInput.parse({
-    estacoes: [{ celularId: "11111111-1111-1111-1111-111111111111", apelido: "   ", x: 0.1, y: 0.1 }],
+    estacoes: [{ portalId: "11111111-1111-1111-1111-111111111111", apelido: "   ", x: 0.1, y: 0.1 }],
     textos: [],
   });
   assert.equal(result.estacoes[0].apelido, null);

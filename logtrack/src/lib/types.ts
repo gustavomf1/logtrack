@@ -1,9 +1,9 @@
 export type Zona = { id: string; nome: string; descricao: string | null; ativa: boolean; criadoEm: string };
-export type Celular = { id: string; nome: string; zonaId: string; tokenCookie: string; ativo: boolean; ultimoUso: string | null; criadoEm: string };
-export type Lote = { id: string; codigo: string; descricao: string | null; quantidade: number | null; dataValidade: string | null; zonaAtualId: string | null; ultimoCelularId: string | null; tagGravada: boolean; arquivado: boolean; criadoEm: string };
-export type Movimentacao = { id: string; loteId: string; zonaOrigemId: string | null; zonaDestinoId: string | null; celularId: string; tipo: "MOVIMENTO" | "CANCELAMENTO"; timestamp: string };
+export type Portal = { id: string; nome: string; zonaId: string; tokenCookie: string; ativo: boolean; ultimoUso: string | null; criadoEm: string };
+export type Lote = { id: string; codigo: string; descricao: string | null; quantidade: number | null; dataValidade: string | null; zonaAtualId: string | null; ultimoPortalId: string | null; tagGravada: boolean; arquivado: boolean; criadoEm: string };
+export type Movimentacao = { id: string; loteId: string; zonaOrigemId: string | null; zonaDestinoId: string | null; portalId: string; tipo: "MOVIMENTO" | "CANCELAMENTO"; timestamp: string };
 export type Supervisor = { id: string; email: string; senhaHash: string; nome: string; criadoEm: string };
-export type ReadResult = { modo: "MOVIMENTO" | "CANCELAMENTO" | "CONSULTA"; mensagem: string; lote: Lote; zona: string; timestamp: string; historico: { id: string; origem: string; destino: string; celular: string; timestamp: string; tipo: string }[] };
-export type Leitura = { id: string; loteId: string; celularId: string | null; modo: string; resultado: ReadResult; timestamp: string };
-export type State = { supervisores: Supervisor[]; zonas: Zona[]; celulares: Celular[]; lotes: Lote[]; movimentacoes: Movimentacao[]; leituras: Leitura[] };
-export type DashboardData = Omit<State, "supervisores" | "celulares" | "leituras"> & { celulares: Omit<Celular, "tokenCookie">[]; totalLeituras: number };
+export type ReadResult = { modo: "MOVIMENTO" | "CANCELAMENTO" | "CONSULTA"; mensagem: string; lote: Lote; zona: string; timestamp: string; historico: { id: string; origem: string; destino: string; portal: string; timestamp: string; tipo: string }[] };
+export type Leitura = { id: string; loteId: string; portalId: string | null; modo: string; resultado: ReadResult; timestamp: string };
+export type State = { supervisores: Supervisor[]; zonas: Zona[]; portais: Portal[]; lotes: Lote[]; movimentacoes: Movimentacao[]; leituras: Leitura[] };
+export type DashboardData = Omit<State, "supervisores" | "portais" | "leituras"> & { portais: Omit<Portal, "tokenCookie">[]; totalLeituras: number };
