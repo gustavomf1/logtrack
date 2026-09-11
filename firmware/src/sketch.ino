@@ -3,6 +3,10 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 #include <esp_random.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
+#include <freertos/semphr.h>
 
 // Comente essa linha se você tiver o RC522 disponível no Wokwi
 // #define USE_BUTTON_SIMULATION
@@ -61,6 +65,24 @@ String stationCookie = ""; // cookie de sessão obtido em setupUrl, reenviado em
 String loteId = "";        // extraído da url do lote associado à tag lida, a cada leitura
 String apiOrigin = "";     // schema://host:porta do backend (igual pra todos os lotes)
 
+// stationCookie e toda chamada HTTPClient (autenticarEstacao/enviarLeitura/reenviarFila)
+// só são tocadas dentro de taskRede — nunca em loop(). Isso evita tanto o loop() bloquear
+// esperando rede quanto uma String global sendo lida/escrita de duas tasks ao mesmo tempo.
+#define TAM_PAYLOAD_MAX 128
+#define TAM_FILA_ENVIO 8
+#define MAX_TENTATIVAS_IMEDIATAS 3
+#define DEBOUNCE_MESMA_TAG_MS 1000
+
+struct ItemEnvio {
+  char payload[TAM_PAYLOAD_MAX];
+};
+
+QueueHandle_t filaEnvio;           // loop() -> taskRede: leituras prontas pra enviar
+SemaphoreHandle_t mutexArquivoFila; // protege fila.jsonl, acessado por loop() e taskRede
+
+String ultimaTagId = "";
+unsigned long ultimaLeituraMillis = 0;
+
 void setup() {
   Serial.begin(115200);
 
@@ -101,20 +123,17 @@ void setup() {
   Serial.println();
   Serial.println(WiFi.status() == WL_CONNECTED ? "WiFi conectado" : "Sem conexão inicial — modo offline");
 
-  if (estaOnline()) {
-    autenticarEstacao();
-  }
+  filaEnvio = xQueueCreate(TAM_FILA_ENVIO, sizeof(ItemEnvio));
+  mutexArquivoFila = xSemaphoreCreateMutex();
+
+  // Toda chamada de rede (autenticação, POST de leitura, drenagem da fila offline) roda
+  // nessa task, no outro núcleo — loop() nunca fica bloqueado esperando HTTP, então o
+  // RFID continua sendo consultado mesmo com um envio em andamento.
+  xTaskCreatePinnedToCore(taskRede, "taskRede", 10240, NULL, 1, NULL, 0);
 }
 
 void loop() {
   verificarBotaoModo();
-
-  if (estaOnline()) {
-    if (stationCookie.length() == 0) {
-      autenticarEstacao(); // tenta de novo caso o setup tenha ficado offline
-    }
-    reenviarFila();
-  }
 
   String tagId = "";
 
@@ -130,28 +149,33 @@ void loop() {
     return; // botão solto, nada a fazer
   }
   tagId = "01020304"; // simula a tag da LT-2026-0005; troque por outra do tagsLotes pra testar outro lote
-  delay(300); // debounce
+  delay(300); // debounce do botão físico
 #endif
+
+  // Debounce por tag: ignora releitura da MESMA tag em menos de 1s (ainda parada no
+  // campo do leitor), mas nunca segura uma tag DIFERENTE lida logo em seguida — não tem
+  // mais delay() fixo nem envio HTTP aqui dentro, então o RFID nunca fica de fora.
+  if (tagId == ultimaTagId && millis() - ultimaLeituraMillis < DEBOUNCE_MESMA_TAG_MS) {
+    return;
+  }
+  ultimaTagId = tagId;
+  ultimaLeituraMillis = millis();
 
   Serial.println("Tag detectada: " + tagId);
 
   if (!buscarLoteParaTag(tagId, loteId)) {
     Serial.println("Tag sem lote associado, ignorando: " + tagId);
-    delay(1000);
     return;
   }
 
   String payload = montarPayload();
 
-  if (estaOnline()) {
-    if (!enviarLeitura(payload)) {
-      salvarNaFila(payload);
-    }
-  } else {
+  // Só enfileira (não bloqueia); taskRede é quem de fato manda pra API. Cai na fila
+  // offline em disco se estiver sem rede ou se a fila de envio estiver cheia (taskRede
+  // sobrecarregada/travada em retries).
+  if (!estaOnline() || !enfileirarEnvio(payload)) {
     salvarNaFila(payload);
   }
-
-  delay(1000); // evita leitura duplicada
 }
 
 bool estaOnline() {
@@ -222,6 +246,53 @@ String montarPayload() {
   return payload;
 }
 
+// Copia o payload pra um item de tamanho fixo e empilha na fila de envio sem bloquear
+// (timeout 0): se a fila estiver cheia, devolve false e quem chamou trata a leitura como
+// se tivesse falhado (cai na fila offline em disco).
+bool enfileirarEnvio(const String& payload) {
+  ItemEnvio item;
+  payload.toCharArray(item.payload, sizeof(item.payload));
+  return xQueueSend(filaEnvio, &item, 0) == pdTRUE;
+}
+
+// Tenta reenviar algumas vezes com um pequeno backoff antes de desistir e cair na fila
+// offline em disco. Roda só dentro de taskRede, então os delays aqui não afetam loop().
+void processarEnvio(const String& payload) {
+  for (int tentativa = 1; tentativa <= MAX_TENTATIVAS_IMEDIATAS; tentativa++) {
+    if (enviarLeitura(payload)) {
+      return; // enviarLeitura já loga o sucesso
+    }
+    if (tentativa < MAX_TENTATIVAS_IMEDIATAS) {
+      Serial.println("Retentando envio (" + String(tentativa + 1) + "/" + String(MAX_TENTATIVAS_IMEDIATAS) + "): " + payload);
+      vTaskDelay(pdMS_TO_TICKS(500 * tentativa));
+    }
+  }
+  Serial.println("Esgotadas as tentativas imediatas, indo pra fila offline: " + payload);
+  salvarNaFila(payload);
+}
+
+// Task de rede: autentica, drena a fila offline e processa a fila de envio, tudo em
+// background. loop() nunca chama HTTPClient diretamente — só lê o RFID e enfileira.
+void taskRede(void* parametro) {
+  for (;;) {
+    if (!estaOnline()) {
+      vTaskDelay(pdMS_TO_TICKS(500));
+      continue;
+    }
+
+    if (stationCookie.length() == 0) {
+      autenticarEstacao(); // tenta de novo caso tenha ficado offline antes de autenticar
+    }
+
+    reenviarFila();
+
+    ItemEnvio item;
+    if (xQueueReceive(filaEnvio, &item, pdMS_TO_TICKS(500)) == pdTRUE) {
+      processarEnvio(String(item.payload));
+    }
+  }
+}
+
 void autenticarEstacao() {
   HTTPClient http;
   const char* headersDesejados[] = {"Set-Cookie"};
@@ -265,6 +336,11 @@ bool enviarLeitura(String payload) {
 }
 
 void salvarNaFila(String payload) {
+  if (xSemaphoreTake(mutexArquivoFila, pdMS_TO_TICKS(1000)) != pdTRUE) {
+    Serial.println("Timeout ao acessar fila offline, leitura perdida: " + payload);
+    return;
+  }
+
   File file = LittleFS.open(queueFile, "a");
   if (file) {
     file.println(payload);
@@ -273,13 +349,25 @@ void salvarNaFila(String payload) {
   } else {
     Serial.println("Erro ao salvar na fila offline");
   }
+
+  xSemaphoreGive(mutexArquivoFila);
 }
 
 void reenviarFila() {
-  if (!LittleFS.exists(queueFile)) return;
+  if (xSemaphoreTake(mutexArquivoFila, pdMS_TO_TICKS(1000)) != pdTRUE) {
+    return; // não conseguiu o lock a tempo, tenta de novo no próximo ciclo da taskRede
+  }
+
+  if (!LittleFS.exists(queueFile)) {
+    xSemaphoreGive(mutexArquivoFila);
+    return;
+  }
 
   File file = LittleFS.open(queueFile, "r");
-  if (!file) return;
+  if (!file) {
+    xSemaphoreGive(mutexArquivoFila);
+    return;
+  }
 
   String linhasRestantes = "";
   bool houveFalha = false;
@@ -303,4 +391,6 @@ void reenviarFila() {
     out.print(linhasRestantes);
     out.close();
   }
+
+  xSemaphoreGive(mutexArquivoFila);
 }
