@@ -8,7 +8,7 @@ export const isDemo = () => process.env.DEMO_MODE === "true" && !process.env.VER
 const root = path.resolve(/*turbopackIgnore: true*/ process.env.DEMO_DATA_DIR || path.join(process.cwd(), "data"));
 const file = path.join(root, "demo.json");
 const globalStore = globalThis as unknown as { prisma?: PrismaClient; queue?: Promise<unknown> };
-function prisma() { return globalStore.prisma ??= new PrismaClient(); }
+export function prisma() { return globalStore.prisma ??= new PrismaClient(); }
 async function loadDemo(): Promise<State> {
   try { return JSON.parse(await readFile(file, "utf8")); }
   catch (error) {

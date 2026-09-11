@@ -8,7 +8,7 @@
     "build": "prisma generate && next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/movement.test.ts tests/service.test.ts",
+    "test": "tsx --test tests/movement.test.ts tests/mapa.test.ts tests/service.test.ts",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
@@ -19,11 +19,14 @@
     "@prisma/client": "6.19.3",
     "@supabase/supabase-js": "^2.115.0",
     "bcryptjs": "^3.0.2",
+    "konva": "^10.5.0",
     "lucide-react": "^0.468.0",
     "next": "16.3.4",
     "next-auth": "4.24.15",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-konva": "^19.2.7",
+    "use-image": "^1.1.4",
     "zod": "^3.24.0"
   },
   "devDependencies": {
