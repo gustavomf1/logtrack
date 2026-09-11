@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { createClient } from "@supabase/supabase-js";
 import { AppError } from "./service";
+import { clampNormalized, type MapaUpdateInput } from "./mapa";
 import type { MapaData } from "./mapa-client-types";
 const globalStore = globalThis as unknown as { mapaPrisma?: PrismaClient };
 export function mapaPrisma() { return globalStore.mapaPrisma ??= new PrismaClient(); }
@@ -44,4 +45,25 @@ export async function uploadPlanta(file: File) {
     ? await mapaPrisma().mapa.update({ where: { id: existing.id }, data: { imagemUrl: data.publicUrl } })
     : await mapaPrisma().mapa.create({ data: { nome: "Mapa da empresa", imagemUrl: data.publicUrl } });
   return { id: mapa.id, imagemUrl: mapa.imagemUrl };
+}
+
+export async function updateMapa(input: MapaUpdateInput): Promise<MapaData> {
+  const mapa = await mapaPrisma().mapa.findFirst({ orderBy: { criadoEm: "asc" } });
+  if (!mapa) throw new AppError(409, "Envie a planta antes de posicionar elementos.");
+  const keepIds = input.textos.filter(t => t.id).map(t => t.id!);
+  await mapaPrisma().$transaction([
+    ...input.estacoes.map(e => mapaPrisma().estacaoMapa.upsert({
+      where: { mapaId_celularId: { mapaId: mapa.id, celularId: e.celularId } },
+      create: { mapaId: mapa.id, celularId: e.celularId, apelido: e.apelido, x: clampNormalized(e.x), y: clampNormalized(e.y) },
+      update: { apelido: e.apelido, x: clampNormalized(e.x), y: clampNormalized(e.y) },
+    })),
+    mapaPrisma().textoMapa.deleteMany({ where: { mapaId: mapa.id, id: { notIn: keepIds.length ? keepIds : ["00000000-0000-0000-0000-000000000000"] } } }),
+    ...input.textos.filter(t => t.id).map(t => mapaPrisma().textoMapa.update({
+      where: { id: t.id }, data: { texto: t.texto, x: clampNormalized(t.x), y: clampNormalized(t.y) },
+    })),
+    ...input.textos.filter(t => !t.id).map(t => mapaPrisma().textoMapa.create({
+      data: { mapaId: mapa.id, texto: t.texto, x: clampNormalized(t.x), y: clampNormalized(t.y) },
+    })),
+  ]);
+  return (await getMapa())!;
 }

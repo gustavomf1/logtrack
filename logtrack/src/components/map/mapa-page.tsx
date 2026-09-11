@@ -6,6 +6,7 @@ import type { DashboardData } from "@/lib/types";
 import type { MapaData } from "@/lib/mapa-client-types";
 import { OperationalView } from "./operational-view";
 import { MapaEmptyState } from "./empty-state";
+import { ConfigView } from "./config-view";
 
 export function MapaPage({ data, mapaData }: { data: DashboardData; mapaData: MapaData | null }) {
   const [mode, setMode] = useState<"operacional" | "configuracao">("operacional");
@@ -34,6 +35,6 @@ export function MapaPage({ data, mapaData }: { data: DashboardData; mapaData: Ma
     {error && <div className="form-error">{error}</div>}
     {!mapaData?.imagemUrl && <MapaEmptyState onUpload={upload} busy={busy}/>}
     {mapaData?.imagemUrl && mode === "operacional" && <OperationalView mapaData={mapaData} data={data}/>}
-    {mapaData?.imagemUrl && mode === "configuracao" && <p className="muted">Modo de configuração chega na Task 5.</p>}
+    {mapaData?.imagemUrl && mode === "configuracao" && <ConfigView mapaData={mapaData} data={data} onSaved={() => router.refresh()}/>}
   </>;
 }
