@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "author": "jv piloni",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "board-mfrc522",
+      "id": "rfid1",
+      "top": -41.05,
+      "left": 137.84,
+      "attrs": {
+        "uid": "01:02:03:04"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btnModo",
+      "top": 200,
+      "left": 320,
+      "attrs": {
+        "color": "blue"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledOffline",
+      "top": 120,
+      "left": 300,
+      "attrs": {
+        "color": "red"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledOnline",
+      "top": 120,
+      "left": 360,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 160,
+      "left": 300,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 160,
+      "left": 360,
+      "attrs": {
+        "value": "220"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "rfid1:3.3V",
+      "esp:3V3",
+      "green",
+      [
+        "h-19.2",
+        "v-76.8",
+        "h-124.8"
+      ]
+    ],
+    [
+      "rfid1:RST",
+      "esp:22",
+      "green",
+      [
+        "h-19.2",
+        "v-9.6"
+      ]
+    ],
+    [
+      "rfid1:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h-19.2",
+        "v-19.2"
+      ]
+    ],
+    [
+      "rfid1:MISO",
+      "esp:19",
+      "green",
+      [
+        "h-19.2",
+        "v67.2"
+      ]
+    ],
+    [
+      "rfid1:MOSI",
+      "esp:23",
+      "green",
+      [
+        "h-19.2",
+        "v19.2"
+      ]
+    ],
+    [
+      "rfid1:SCK",
+      "esp:18",
+      "green",
+      [
+        "h-19.2",
+        "v96"
+      ]
+    ],
+    [
+      "rfid1:SDA",
+      "esp:5",
+      "green",
+      [
+        "h-19.2",
+        "v115.2"
+      ]
+    ],
+    [
+      "ledOffline:A",
+      "r1:1",
+      "red",
+      []
+    ],
+    [
+      "r1:2",
+      "esp:25",
+      "red",
+      []
+    ],
+    [
+      "ledOffline:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "ledOnline:A",
+      "r2:1",
+      "green",
+      []
+    ],
+    [
+      "r2:2",
+      "esp:26",
+      "green",
+      []
+    ],
+    [
+      "ledOnline:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "btnModo:1.l",
+      "esp:27",
+      "blue",
+      []
+    ],
+    [
+      "btnModo:2.l",
+      "esp:GND.1",
+      "black",
+      []
+    ]
+  ],
+  "dependencies": {}
+}

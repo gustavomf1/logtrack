@@ -55,27 +55,10 @@ function serial<T>(fn: () => Promise<T>): Promise<T> {
   return job;
 }
 export function readState(): Promise<State> {
-  if (isDemo()) return serial(loadDemo);
+  // if (isDemo()) return serial(loadDemo);
   return prisma().$transaction(tx => loadDb(tx));
 }
 export function transaction<T>(fn: (state: State) => T | Promise<T>): Promise<T> {
-  if (isDemo()) return serial(async () => {
-    const state = await loadDemo();
-    const result = await fn(state);
-    const temporary = file + ".tmp";
-    await writeFile(temporary, JSON.stringify(state, null, 2));
-    // OneDrive e antivírus podem bloquear a substituição por alguns instantes.
-    // Repetimos somente o rename, mantendo a gravação atômica e a mesma operação.
-    for (let attempt = 0; ; attempt++) {
-      try { await rename(temporary, file); break; }
-      catch (error) {
-        const code = (error as NodeJS.ErrnoException).code;
-        if (process.platform !== "win32" || !["EPERM", "EACCES", "EBUSY"].includes(code || "") || attempt >= 5) throw error;
-        await delay(100 * (attempt + 1));
-      }
-    }
-    return result;
-  });
   return prisma().$transaction(async tx => {
     // Serializa operações do MVP inclusive entre instâncias da Vercel.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(742019)`;
