@@ -56,6 +56,9 @@ export function ConfigView({ mapaData, data, onSaved }: { mapaData: MapaData; da
       const response = await fetch("/api/mapa", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Não foi possível salvar o mapa.");
+      const saved = result as MapaData;
+      setEstacoes(saved.estacoes);
+      setTextos(saved.textos);
       onSaved();
     } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
