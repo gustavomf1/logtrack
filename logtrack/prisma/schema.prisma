@@ -36,6 +36,7 @@ model Celular {
   ultimoUso DateTime? @map("ultimo_uso")
   criadoEm DateTime @default(now()) @map("criado_em")
   lotes Lote[]
+  estacoesMapa EstacaoMapa[]
   movimentacoes Movimentacao[]
   @@index([zonaId])
   @@map("celulares")
@@ -86,4 +87,41 @@ model Leitura {
   timestamp DateTime @default(now())
   @@index([loteId, timestamp])
   @@map("leituras")
+}
+model Mapa {
+  id           String        @id @default(uuid()) @db.Uuid
+  nome         String        @db.VarChar(100)
+  imagemUrl    String?       @map("imagem_url")
+  larguraBase  Int?          @map("largura_base")
+  alturaBase   Int?          @map("altura_base")
+  criadoEm     DateTime      @default(now()) @map("criado_em")
+  atualizadoEm DateTime      @updatedAt @map("atualizado_em")
+  estacoes     EstacaoMapa[]
+  textos       TextoMapa[]
+  @@map("mapas")
+}
+model EstacaoMapa {
+  id        String   @id @default(uuid()) @db.Uuid
+  mapaId    String   @db.Uuid @map("mapa_id")
+  mapa      Mapa     @relation(fields:[mapaId], references:[id], onDelete:Cascade)
+  celularId String   @db.Uuid @map("celular_id")
+  celular   Celular  @relation(fields:[celularId], references:[id], onDelete:Cascade)
+  apelido   String?  @db.VarChar(100)
+  x         Float
+  y         Float
+  rotacao   Float    @default(0)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+  @@unique([mapaId, celularId])
+  @@map("estacoes_mapa")
+}
+model TextoMapa {
+  id       String   @id @default(uuid()) @db.Uuid
+  mapaId   String   @db.Uuid @map("mapa_id")
+  mapa     Mapa     @relation(fields:[mapaId], references:[id], onDelete:Cascade)
+  texto    String   @db.VarChar(200)
+  x        Float
+  y        Float
+  criadoEm DateTime @default(now()) @map("criado_em")
+  @@index([mapaId])
+  @@map("textos_mapa")
 }

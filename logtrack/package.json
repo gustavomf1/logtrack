@@ -8,7 +8,7 @@
     "build": "prisma generate && next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/movement.test.ts tests/service.test.ts",
+    "test": "tsx --test tests/movement.test.ts tests/mapa.test.ts tests/service.test.ts",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
