@@ -6,12 +6,14 @@ import { ArrowDownLeft, ArrowRight, ArrowUpRight, CheckCircle2, Clock3, MapPin, 
 import { date, datetime, expiry, zoneName } from "@/lib/format";
 import { filterLots } from "@/lib/filters";
 import type { DashboardData, Lote } from "@/lib/types";
+import type { MapaData } from "@/lib/mapa-client-types";
 import { Back, Empty, PageTitle, api } from "./ui";
 import { LotForm, StationForm, ZoneForm, TagWriter } from "./management";
 import { DeleteLotButton } from "./delete-lot";
 import { LiveNotifications } from "./live-notifications";
+import { MapaPage } from "./map/mapa-page";
 
-export function Dashboard({ initialData: data, path, authenticated = true }: { initialData: DashboardData; path: string[]; authenticated?: boolean }) {
+export function Dashboard({ initialData: data, mapaData, path, authenticated = true }: { initialData: DashboardData; mapaData?: MapaData | null; path: string[]; authenticated?: boolean }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -26,6 +28,7 @@ export function Dashboard({ initialData: data, path, authenticated = true }: { i
   let content;
   if (!section) content = <Overview data={data} authenticated={authenticated}/>;
   else if (section === "ajuda") content = <Help/>;
+  else if (section === "mapa") content = <MapaPage data={data} mapaData={mapaData ?? null}/>;
   else if (section === "lotes") {
     const lot = data.lotes.find(l => l.id === id);
     if (!id) content = <Lots data={data}/>;
