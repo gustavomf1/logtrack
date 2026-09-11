@@ -1,10 +1,10 @@
-import type { Celular, Lote, Movimentacao } from "./types";
-export function decideMovement(lote: Pick<Lote, "zonaAtualId" | "ultimoCelularId">, celular: Pick<Celular, "id" | "zonaId">) {
-  const cancelamento = lote.zonaAtualId !== null && lote.ultimoCelularId === celular.id;
+import type { Portal, Lote, Movimentacao } from "./types";
+export function decideMovement(lote: Pick<Lote, "zonaAtualId" | "ultimoPortalId">, portal: Pick<Portal, "id" | "zonaId">) {
+  const cancelamento = lote.zonaAtualId !== null && lote.ultimoPortalId === portal.id;
   return {
     zonaOrigemId: lote.zonaAtualId,
-    zonaDestinoId: cancelamento ? null : celular.zonaId,
+    zonaDestinoId: cancelamento ? null : portal.zonaId,
     tipo: (cancelamento ? "CANCELAMENTO" : "MOVIMENTO") as Movimentacao["tipo"],
-    ultimoCelularId: celular.id,
+    ultimoPortalId: portal.id,
   };
 }

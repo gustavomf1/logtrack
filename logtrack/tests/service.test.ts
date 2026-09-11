@@ -15,7 +15,7 @@ test("serviço: persistência, concorrência, auditoria, permissões e cadastros
   const { signStation, verifyStation } = await import("../src/lib/security");
   const initial = await readState();
   const lot = initial.lotes[0];
-  const station = initial.celulares[0];
+  const station = initial.portais[0];
   const cookie = signStation(station.id, station.tokenCookie);
   const origin = "http://localhost:3000";
 
@@ -38,18 +38,18 @@ test("serviço: persistência, concorrência, auditoria, permissões e cadastros
     const result = await registerRead(lot.id, randomUUID(), cookie);
     assert.equal(result.modo, "CANCELAMENTO"); assert.equal(result.lote.zonaAtualId, null);
     const state = await readState(); assert.equal(state.movimentacoes.length, 2); assert.deepEqual(state.movimentacoes[0], before);
-    assert.ok(state.celulares[0].ultimoUso);
+    assert.ok(state.portais[0].ultimoUso);
   });
   await t.test("rotação revoga cookie anterior e cookie adulterado vira consulta", async () => {
-    await mutate("celulares", station.id, "regenerar-token", "POST", {}, origin);
+    await mutate("portais", station.id, "regenerar-token", "POST", {}, origin);
     assert.equal((await registerRead(lot.id, randomUUID(), cookie)).modo, "CONSULTA");
     const forged = cookie.slice(0, -1) + (cookie.endsWith("a") ? "b" : "a");
     assert.equal(verifyStation(forged), null);
     assert.equal((await registerRead(lot.id, randomUUID(), forged)).modo, "CONSULTA");
   });
   await t.test("estação desativada não movimenta", async () => {
-    const other = initial.celulares[1];
-    await mutate("celulares", other.id, undefined, "PATCH", { ativo: false }, origin);
+    const other = initial.portais[1];
+    await mutate("portais", other.id, undefined, "PATCH", { ativo: false }, origin);
     assert.equal((await registerRead(lot.id, randomUUID(), signStation(other.id, other.tokenCookie))).modo, "CONSULTA");
   });
   await t.test("não desativa zona ocupada e alteração de status preserva descrição", async () => {
@@ -64,21 +64,21 @@ test("serviço: persistência, concorrência, auditoria, permissões e cadastros
     await mutate("lotes", lot.id, undefined, "PATCH", { codigo: "EDITADO", descricao: "Peças", quantidade: 10, dataValidade: null, zonaAtualId: "adulterado" }, origin);
     assert.equal((await readState()).lotes[0].zonaAtualId, null);
     await mutate("lotes", lot.id, undefined, "DELETE", {}, origin);
-    const third = initial.celulares[2];
+    const third = initial.portais[2];
     assert.equal((await registerRead(lot.id, randomUUID(), signStation(third.id, third.tokenCookie))).modo, "CONSULTA");
   });
   await t.test("histórico público limitado a cinco; painel mantém auditoria completa sem tokens", async () => {
-    const third = initial.celulares[2]; const token = signStation(third.id, third.tokenCookie);
+    const third = initial.portais[2]; const token = signStation(third.id, third.tokenCookie);
     let last;
     for (let i = 0; i < 7; i++) last = await registerRead(initial.lotes[2].id, randomUUID(), token);
     assert.equal(last?.historico.length, 5);
     const data = await dashboard();
     assert.equal(data.movimentacoes.filter(m => m.loteId === initial.lotes[2].id).length, 7);
-    assert.ok(data.celulares.every(c => !("tokenCookie" in c)));
+    assert.ok(data.portais.every(c => !("tokenCookie" in c)));
   });
   await t.test("exclusão de lote em zona preserva histórico e impede novas operações", async () => {
     const target = initial.lotes[2];
-    const third = initial.celulares[2];
+    const third = initial.portais[2];
     const before = await readState();
     const original = before.lotes.find(l => l.id === target.id)!;
     assert.ok(original.zonaAtualId);
@@ -95,7 +95,7 @@ test("serviço: persistência, concorrência, auditoria, permissões e cadastros
     assert.match(reading.mensagem, /lote excluído/);
     await assert.rejects(mutate("lotes", target.id, "gravar-tag", "POST", {}, origin), /apenas para consulta/);
     await assert.rejects(mutate("lotes", target.id, undefined, "PATCH", { codigo: "NOVO" }, origin), /apenas para consulta/);
-    await mutate("celulares", third.id, undefined, "PATCH", { ativo: false }, origin);
+    await mutate("portais", third.id, undefined, "PATCH", { ativo: false }, origin);
     await mutate("zonas", third.zonaId, undefined, "PATCH", { ativa: false }, origin);
     assert.equal((await readState()).zonas.find(z => z.id === third.zonaId)?.ativa, false);
   });

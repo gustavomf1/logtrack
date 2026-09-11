@@ -26,32 +26,32 @@ npm run dev
 
 Abra [o painel local](http://localhost:3000). Entre com o e-mail e a senha definidos no `.env`. O modo local salva os dados em `data/demo.json`, com senha em bcrypt. Nenhum PostgreSQL é necessário para a demonstração. Alterar a senha no `.env` depois do primeiro seed não altera o usuário já salvo.
 
-O seed cria um supervisor, três zonas (Recebimento, Almoxarifado e Expedição), três celulares e cinco lotes. Ele preserva os dados locais existentes; no PostgreSQL, recusa bancos já preenchidos.
+O seed cria um supervisor, três zonas (Recebimento, Almoxarifado e Expedição), três portais e cinco lotes. Ele preserva os dados locais existentes; no PostgreSQL, recusa bancos já preenchidos.
 
-## Ativar os três celulares
+## Ativar os três portais
 
 Depois de executar `npm run db:seed`, abra [os links individuais de ativação](data/README-ativacoes.md). Esse arquivo é gerado com os tokens reais e fica fora do controle de versão. Também há uma cópia estruturada em `data/ativacoes.json`.
 
-1. Abra a URL do Celular 1 no aparelho da Zona A — Recebimento.
-2. Abra a URL do Celular 2 no aparelho da Zona B — Almoxarifado.
-3. Abra a URL do Celular 3 no aparelho da Zona C — Expedição.
+1. Abra a URL do Portal 1 no aparelho da Zona A — Recebimento.
+2. Abra a URL do Portal 2 no aparelho da Zona B — Almoxarifado.
+3. Abra a URL do Portal 3 no aparelho da Zona C — Expedição.
 
-No celular, `localhost` aponta para o próprio aparelho. Para operação RFID física, use a URL HTTPS da aplicação publicada e configure `NEXTAUTH_URL` com essa mesma origem antes de gerar os links. Após a ativação, salve `/estacao` como atalho na tela inicial.
+No aparelho, `localhost` aponta para o próprio aparelho. Para operação RFID física, use a URL HTTPS da aplicação publicada e configure `NEXTAUTH_URL` com essa mesma origem antes de gerar os links. Após a ativação, salve `/estacao` como atalho na tela inicial.
 
-Novas estações são cadastradas em **Estações → Cadastrar celular**. O link de ativação aparece após salvar. **Regenerar token** invalida os cookies antigos imediatamente; abra o novo link no aparelho. A zona de uma estação é fixa. Para mudar a área, desative a estação e cadastre outra.
+Novas estações são cadastradas em **Portais → Cadastrar portal**. O link de ativação aparece após salvar. **Regenerar token** invalida os cookies antigos imediatamente; abra o novo link no aparelho. A zona de uma estação é fixa. Para mudar a área, desative a estação e cadastre outra.
 
 ## Fluxo de uso
 
 - **Lotes → Novo lote:** preencha o código, a descrição, a quantidade e a validade. O lote começa Sem Zona.
-- **Gravar etiqueta:** no celular do supervisor, grave a URL em uma etiqueta RFID e cole-a no lote. A confirmação só é salva após a gravação terminar com sucesso.
-- **Leitura na estação:** aproxime a etiqueta do celular ativado. A página registra automaticamente a movimentação e mostra o resultado.
+- **Gravar etiqueta:** no aparelho do supervisor, grave a URL em uma etiqueta RFID e cole-a no lote. A confirmação só é salva após a gravação terminar com sucesso.
+- **Leitura na estação:** aproxime a etiqueta do portal ativado. A página registra automaticamente a movimentação e mostra o resultado.
 - **Consulta e auditoria:** use o painel para filtrar lotes, editar cadastros, acompanhar zonas e consultar o histórico completo.
 
 | Estado do lote | Leitura | Resultado |
 | --- | --- | --- |
 | Sem Zona | Qualquer estação ativa | Vai para a zona dessa estação |
-| Em uma zona | Mesmo celular da última movimentação | Cancela e volta para Sem Zona |
-| Em uma zona | Outro celular | Vai para a zona do outro celular |
+| Em uma zona | Mesmo portal da última movimentação | Cancela e volta para Sem Zona |
+| Em uma zona | Outro portal | Vai para a zona do outro portal |
 | Qualquer estado | Sem cookie válido ou estação desativada | Consulta, sem movimentação |
 
 Uma nova abertura ou atualização da página `/l/:id` é uma nova leitura. Prefetch e requisições GET não movimentam: o navegador envia automaticamente um POST depois de abrir a página. Repetições da mesma tentativa de rede usam o mesmo identificador, evitando movimentos duplicados. JavaScript e conexão com o servidor são necessários; aguarde a confirmação antes de repetir a leitura.
@@ -62,7 +62,7 @@ A página pública mostra cinco movimentos; o painel mantém todo o histórico. 
 
 A gravação das etiquetas RFID usa a API Web NFC do navegador (`NDEFReader.write`) com um registro URI, exige uma ação do supervisor e pode ser cancelada. Use Chrome no Android, RFID/NFC habilitado e HTTPS. A interface detecta a ausência da API e permite copiar a URL para abrir a tela de gravação em um aparelho compatível. [Documentação do Chrome sobre Web NFC](https://developer.chrome.com/docs/capabilities/nfc).
 
-Os testes automatizados não substituem a validação com etiquetas e celulares físicos.
+Os testes automatizados não substituem a validação com etiquetas e aparelhos físicos.
 
 ## Verificações
 

@@ -20,13 +20,14 @@ model Zona {
   descricao String?
   ativa Boolean @default(true)
   criadoEm DateTime @default(now()) @map("criado_em")
-  celulares Celular[]
+  portais Portal[]
   lotes Lote[]
   origens Movimentacao[] @relation("origem")
   destinos Movimentacao[] @relation("destino")
+  zonasMapa ZonaMapa[]
   @@map("zonas")
 }
-model Celular {
+model Portal {
   id String @id @default(uuid()) @db.Uuid
   nome String @db.VarChar(100)
   zonaId String @db.Uuid @map("zona_id")
@@ -39,7 +40,7 @@ model Celular {
   estacoesMapa EstacaoMapa[]
   movimentacoes Movimentacao[]
   @@index([zonaId])
-  @@map("celulares")
+  @@map("portais")
 }
 model Lote {
   id String @id @default(uuid()) @db.Uuid
@@ -49,8 +50,8 @@ model Lote {
   dataValidade DateTime? @db.Date @map("data_validade")
   zonaAtualId String? @db.Uuid @map("zona_atual_id")
   zonaAtual Zona? @relation(fields:[zonaAtualId], references:[id], onDelete:Restrict)
-  ultimoCelularId String? @db.Uuid @map("ultimo_celular_id")
-  ultimoCelular Celular? @relation(fields:[ultimoCelularId], references:[id], onDelete:Restrict)
+  ultimoPortalId String? @db.Uuid @map("ultimo_portal_id")
+  ultimoPortal Portal? @relation(fields:[ultimoPortalId], references:[id], onDelete:Restrict)
   tagGravada Boolean @default(false) @map("tag_gravada")
   arquivado Boolean @default(false)
   criadoEm DateTime @default(now()) @map("criado_em")
@@ -71,8 +72,8 @@ model Movimentacao {
   zonaOrigem Zona? @relation("origem", fields:[zonaOrigemId], references:[id], onDelete:Restrict)
   zonaDestinoId String? @db.Uuid @map("zona_destino_id")
   zonaDestino Zona? @relation("destino", fields:[zonaDestinoId], references:[id], onDelete:Restrict)
-  celularId String @db.Uuid @map("celular_id")
-  celular Celular @relation(fields:[celularId], references:[id], onDelete:Restrict)
+  portalId String @db.Uuid @map("portal_id")
+  portal Portal @relation(fields:[portalId], references:[id], onDelete:Restrict)
   tipo TipoMovimentacao
   timestamp DateTime @default(now())
   @@index([loteId, timestamp])
@@ -81,7 +82,7 @@ model Movimentacao {
 model Leitura {
   id String @id @db.Uuid
   loteId String @db.Uuid @map("lote_id")
-  celularId String? @db.Uuid @map("celular_id")
+  portalId String? @db.Uuid @map("portal_id")
   modo String
   resultado Json
   timestamp DateTime @default(now())
@@ -98,20 +99,21 @@ model Mapa {
   atualizadoEm DateTime      @updatedAt @map("atualizado_em")
   estacoes     EstacaoMapa[]
   textos       TextoMapa[]
+  zonas        ZonaMapa[]
   @@map("mapas")
 }
 model EstacaoMapa {
   id        String   @id @default(uuid()) @db.Uuid
   mapaId    String   @db.Uuid @map("mapa_id")
   mapa      Mapa     @relation(fields:[mapaId], references:[id], onDelete:Cascade)
-  celularId String   @db.Uuid @map("celular_id")
-  celular   Celular  @relation(fields:[celularId], references:[id], onDelete:Cascade)
+  portalId  String   @db.Uuid @map("portal_id")
+  portal    Portal   @relation(fields:[portalId], references:[id], onDelete:Cascade)
   apelido   String?  @db.VarChar(100)
   x         Float
   y         Float
   rotacao   Float    @default(0)
   criadoEm  DateTime @default(now()) @map("criado_em")
-  @@unique([mapaId, celularId])
+  @@unique([mapaId, portalId])
   @@map("estacoes_mapa")
 }
 model TextoMapa {
@@ -124,4 +126,16 @@ model TextoMapa {
   criadoEm DateTime @default(now()) @map("criado_em")
   @@index([mapaId])
   @@map("textos_mapa")
+}
+model ZonaMapa {
+  id       String   @id @default(uuid()) @db.Uuid
+  mapaId   String   @db.Uuid @map("mapa_id")
+  mapa     Mapa     @relation(fields:[mapaId], references:[id], onDelete:Cascade)
+  zonaId   String   @db.Uuid @map("zona_id")
+  zona     Zona     @relation(fields:[zonaId], references:[id], onDelete:Cascade)
+  x        Float
+  y        Float
+  criadoEm DateTime @default(now()) @map("criado_em")
+  @@unique([mapaId, zonaId])
+  @@map("zonas_mapa")
 }
