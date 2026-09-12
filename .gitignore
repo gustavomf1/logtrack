@@ -1,3 +1,4 @@
 firmware/.pio/
 .vscode/*
 !.vscode/extensions.json
+teste_pn532_esp8266
