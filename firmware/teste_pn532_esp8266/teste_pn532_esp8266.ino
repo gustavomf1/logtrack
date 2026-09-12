@@ -31,7 +31,7 @@ const char* setupApPassword = "logtrack123"; // min. 8 caracteres, exigido pelo 
 
 // Link de ativação da estação — troque pelo da zona/estação que está testando.
 #ifndef SETUP_URL
-#define SETUP_URL "https://logtrack-self.vercel.app/ativar/2fa2fb5a3ee14741b23f0720160bf385485d9506355f205982b2b6a4d54141df"
+#define SETUP_URL "https://logtrack-self.vercel.app/ativar/cfc581782dc46862f52d1dc6a57700e870ed09dfa5a814f65066ebcdf963c56c"
 #endif
 const char* setupUrl = SETUP_URL;
 
@@ -51,10 +51,8 @@ struct TagLote {
 // tag do PN532, o Serial Monitor imprime o UID lido em "Tag detectada: ...") e pelas
 // URLs de lote reais do backend.
 const TagLote tagsLotes[] = {
-  { "01020304", "https://logtrack-self.vercel.app/l/e2a57714-d356-4126-b08b-3513502ff43f" }, // LT-2026-0005
-  { "11223344", "https://logtrack-self.vercel.app/l/70051fa4-923e-4dec-ba4e-e3bc0a351858" }, // LT-2026-0002
-  { "55667788", "https://logtrack-self.vercel.app/l/037d275a-3655-47e3-bd46-5c7b42fb95ac" }, // LT-2026-0003
-  { "AABBCCDD", "https://logtrack-self.vercel.app/l/fe6c018b-82ee-4c82-a835-a527d26ae744" }, // LT-2026-0004
+  { "53B24618340001", "https://logtrack-self.vercel.app/l/70051fa4-923e-4dec-ba4e-e3bc0a351858" }, // LT-2026-0005
+  { "D4631307", "https://logtrack-self.vercel.app/l/e2a57714-d356-4126-b08b-3513502ff43f" }, // LT-2026-0002
 };
 const int NUM_TAGS_LOTES = sizeof(tagsLotes) / sizeof(tagsLotes[0]);
 
