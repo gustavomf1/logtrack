@@ -23,7 +23,7 @@ async function handle(request: NextRequest, context: Context) {
       const data = await dashboard();
       if (resource === "painel" && !id) return NextResponse.json(data);
       if (resource === "zonas" && !id) return NextResponse.json(data.zonas);
-      if (resource === "celulares" && !id) return NextResponse.json(data.celulares);
+      if (resource === "portais" && !id) return NextResponse.json(data.portais);
       if (resource === "lotes" && !action) {
         if (!id) return NextResponse.json(filterLots(data, request.nextUrl.searchParams));
         const lote = data.lotes.find(x => x.id === id);
@@ -32,8 +32,8 @@ async function handle(request: NextRequest, context: Context) {
       }
       throw new AppError(404, "Rota não encontrada.");
     }
-    if (!["zonas", "celulares", "lotes"].includes(resource)) throw new AppError(404, "Rota não encontrada.");
-    const allowedAction = request.method === "POST" && id && ((resource === "lotes" && action === "gravar-tag") || (resource === "celulares" && action === "regenerar-token"));
+    if (!["zonas", "portais", "lotes"].includes(resource)) throw new AppError(404, "Rota não encontrada.");
+    const allowedAction = request.method === "POST" && id && ((resource === "lotes" && action === "gravar-tag") || (resource === "portais" && action === "regenerar-token"));
     const allowedCrud = !action && ((request.method === "POST" && !id) || (id && ["PATCH","DELETE"].includes(request.method)));
     if (!allowedAction && !allowedCrud) throw new AppError(405, "Método não permitido.");
     const body = request.method === "DELETE" ? {} : await request.json();

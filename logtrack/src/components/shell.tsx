@@ -2,10 +2,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, ArrowUpRight, CircleHelp, LogOut, LogIn, Radio, Menu, X } from "lucide-react";
+import { LayoutDashboard, ArrowUpRight, CircleHelp, LogOut, LogIn, Radio, Menu, X, Map as MapIcon, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { Brand } from "./brand";
-const navigation = [{ href: "/", label: "Visão geral", icon: LayoutDashboard }];
+const navigation = [{ href: "/", label: "Visão geral", icon: LayoutDashboard }, { href: "/mapa", label: "Mapa", icon: MapIcon }, { href: "/portais", label: "Portais", icon: Smartphone }];
 export function Shell({ children, name }: { children: React.ReactNode; name: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);

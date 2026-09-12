@@ -13,10 +13,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
   if (!/^[a-f0-9]{64}$/.test(token)) return redirectToStation("erro=token");
   const state = await readState();
-  const celular = state.celulares.find(x => x.tokenCookie === hashToken(token) && x.ativo && state.zonas.some(z => z.id === x.zonaId && z.ativa));
-  if (!celular) return redirectToStation("erro=token");
+  const portal = state.portais.find(x => x.tokenCookie === hashToken(token) && x.ativo && state.zonas.some(z => z.id === x.zonaId && z.ativa));
+  if (!portal) return redirectToStation("erro=token");
   const response = redirectToStation("ativado=1");
-  response.cookies.set(stationCookie, signStation(celular.id, celular.tokenCookie), cookieOptions());
+  response.cookies.set(stationCookie, signStation(portal.id, portal.tokenCookie), cookieOptions());
   response.headers.set("Cache-Control", "no-store");
   response.headers.set("Referrer-Policy", "no-referrer");
   return response;
