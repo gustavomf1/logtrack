@@ -96,4 +96,26 @@ class ZonaResourceTest {
             .when().delete("/api/zonas/" + zonaId)
             .then().statusCode(409);
     }
+
+    @Test
+    void patchAtivaFalseBlockedWhenZonaHasActivePortal() {
+        String auth = token();
+        String zonaId = given().header("Authorization", "Bearer " + auth)
+            .contentType("application/json")
+            .body("{\"nome\":\"Zona Bloqueio Patch " + System.nanoTime() + "\"}")
+            .when().post("/api/zonas")
+            .then().statusCode(200).extract().path("id");
+
+        given().header("Authorization", "Bearer " + auth)
+            .contentType("application/json")
+            .body("{\"nome\":\"Portal Bloqueio Patch\",\"zonaId\":\"" + zonaId + "\"}")
+            .when().post("/api/portais")
+            .then().statusCode(200);
+
+        given().header("Authorization", "Bearer " + auth)
+            .contentType("application/json")
+            .body("{\"ativa\":false}")
+            .when().patch("/api/zonas/" + zonaId)
+            .then().statusCode(409);
+    }
 }

@@ -55,18 +55,27 @@ public class ZonaService {
             zona.setNome(request.getNome());
         }
         if (request.getDescricao() != null) zona.setDescricao(request.getDescricao());
-        if (request.getAtiva() != null) zona.setAtiva(request.getAtiva());
+        if (request.getAtiva() != null) {
+            if (!request.getAtiva()) {
+                ensureCanDeactivate(id);
+            }
+            zona.setAtiva(request.getAtiva());
+        }
         return toDTO(zona);
     }
 
     @Transactional
     public ZonaResponseDTO deactivate(UUID id) {
         Zona zona = repository.findByIdOptional(id).orElseThrow(() -> new AppException(404, "Zona não encontrada."));
-        if (loteRepository.existsAtivoByZonaAtual(id) || portalRepository.existsActiveByZona(id)) {
-            throw new AppException(409, "Mova os lotes e desative as estações antes de desativar a zona.");
-        }
+        ensureCanDeactivate(id);
         zona.setAtiva(false);
         return toDTO(zona);
+    }
+
+    private void ensureCanDeactivate(UUID zonaId) {
+        if (loteRepository.existsAtivoByZonaAtual(zonaId) || portalRepository.existsActiveByZona(zonaId)) {
+            throw new AppException(409, "Mova os lotes e desative as estações antes de desativar a zona.");
+        }
     }
 
     public ZonaResponseDTO toDTO(Zona z) {
