@@ -40,6 +40,9 @@ public class ZonaService {
     public ZonaResponseDTO update(UUID id, ZonaUpdateRequestDTO request) {
         Zona zona = repository.findByIdOptional(id).orElseThrow(() -> new AppException(404, "Zona não encontrada."));
         if (request.getNome() != null) {
+            if (request.getNome().isBlank()) {
+                throw new AppException(400, "Preencha o nome.");
+            }
             if (repository.existsByNomeIgnoreCase(request.getNome(), id)) {
                 throw new AppException(409, "Já existe uma zona com esse nome.");
             }

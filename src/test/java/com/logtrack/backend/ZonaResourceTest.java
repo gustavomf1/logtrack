@@ -57,6 +57,22 @@ class ZonaResourceTest {
     }
 
     @Test
+    void patchWithBlankNomeReturns400() {
+        String name = "Almoxarifado " + System.nanoTime();
+        String id = given().header("Authorization", "Bearer " + token())
+            .contentType("application/json")
+            .body("{\"nome\":\"" + name + "\"}")
+            .when().post("/api/zonas")
+            .then().statusCode(200).extract().path("id");
+
+        given().header("Authorization", "Bearer " + token())
+            .contentType("application/json")
+            .body("{\"nome\":\"\"}")
+            .when().patch("/api/zonas/" + id)
+            .then().statusCode(400);
+    }
+
+    @Test
     void withoutTokenReturns401() {
         given().when().get("/api/zonas").then().statusCode(401);
     }
