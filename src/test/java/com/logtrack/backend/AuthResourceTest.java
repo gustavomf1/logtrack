@@ -3,7 +3,7 @@ package com.logtrack.backend;
 import com.logtrack.backend.entity.Supervisor;
 import com.logtrack.backend.repository.SupervisorRepository;
 import com.logtrack.backend.security.PasswordHasher;
-import io.quarkus.test.TestTransaction;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -22,13 +22,14 @@ class AuthResourceTest {
     PasswordHasher passwordHasher;
 
     @Test
-    @TestTransaction
     void loginWithValidCredentialsReturnsToken() {
-        Supervisor supervisor = new Supervisor();
-        supervisor.setEmail("supervisor@logtrack.local");
-        supervisor.setSenhaHash(passwordHasher.hash("LogTrack123!"));
-        supervisor.setNome("Supervisor Teste");
-        supervisorRepository.persist(supervisor);
+        QuarkusTransaction.requiringNew().run(() -> {
+            Supervisor supervisor = new Supervisor();
+            supervisor.setEmail("supervisor@logtrack.local");
+            supervisor.setSenhaHash(passwordHasher.hash("LogTrack123!"));
+            supervisor.setNome("Supervisor Teste");
+            supervisorRepository.persist(supervisor);
+        });
 
         given()
             .contentType("application/json")
@@ -43,13 +44,14 @@ class AuthResourceTest {
     }
 
     @Test
-    @TestTransaction
     void loginWithWrongPasswordReturns401() {
-        Supervisor supervisor = new Supervisor();
-        supervisor.setEmail("outro@logtrack.local");
-        supervisor.setSenhaHash(passwordHasher.hash("SenhaCorreta1!"));
-        supervisor.setNome("Outro");
-        supervisorRepository.persist(supervisor);
+        QuarkusTransaction.requiringNew().run(() -> {
+            Supervisor supervisor = new Supervisor();
+            supervisor.setEmail("outro@logtrack.local");
+            supervisor.setSenhaHash(passwordHasher.hash("SenhaCorreta1!"));
+            supervisor.setNome("Outro");
+            supervisorRepository.persist(supervisor);
+        });
 
         given()
             .contentType("application/json")
