@@ -21,4 +21,8 @@ public class LeituraRepository {
     public Optional<Leitura> findById(UUID id) {
         return Optional.ofNullable(entityManager.find(Leitura.class, id));
     }
+
+    public long count() {
+        return entityManager.createQuery("select count(l) from Leitura l", Long.class).getSingleResult();
+    }
 }

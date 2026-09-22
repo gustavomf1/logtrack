@@ -27,4 +27,10 @@ public class MovimentacaoRepository {
             .setMaxResults(limit)
             .getResultList();
     }
+
+    public List<Movimentacao> listAllOrderByTimestampDesc() {
+        return entityManager.createQuery(
+                "select m from Movimentacao m order by m.timestamp desc", Movimentacao.class)
+            .getResultList();
+    }
 }
