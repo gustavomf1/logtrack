@@ -1,0 +1,5 @@
+<div class="copy-url">
+  <input aria-label="URL para copiar" readonly [value]="url" (focus)="selectAll($event)"/>
+  <button type="button" class="button secondary" (click)="copy()">Copiar</button>
+  <small role="status">{{ message() }}</small>
+</div>

@@ -1,0 +1,27 @@
+<div class="public-page">
+  <header><app-brand></app-brand><svg lucideSmartphone [size]="21"></svg></header>
+  <main class="reader-card station-card">
+    @if (!loading()) {
+      @if (erro()) {
+        <svg lucideInfo [size]="42"></svg>
+        <h1>Link de ativação inválido</h1>
+        <p>Peça ao supervisor um novo link de ativação para este aparelho.</p>
+      } @else if (station()?.vinculada) {
+        <div class="station-ready"><svg lucideCheckCircle2 [size]="18"></svg>Estação {{ ativado() ? 'ativada com sucesso' : 'pronta para operar' }}</div>
+        <div class="station-nfc"><svg lucideRadio [size]="64"></svg></div>
+        <h1>{{ station()?.nome }}</h1>
+        <p class="station-zone">{{ station()?.zona }}</p>
+        <h2>Aproxime uma etiqueta RFID</h2>
+        <p>A URL da etiqueta abrirá o lote e registrará a movimentação automaticamente.</p>
+        <div class="info-box">No Chrome, abra o menu e escolha <strong>Adicionar à tela inicial</strong> para salvar esta estação. Mantenha o RFID do Android ativado.</div>
+        <small>Uma segunda leitura pelo mesmo portal cancela a movimentação.</small>
+      } @else {
+        <svg lucideSmartphone [size]="46"></svg>
+        <h1>Vincule este aparelho</h1>
+        <p>Abra o link de ativação fornecido pelo supervisor para vincular este aparelho a uma zona.</p>
+        <a class="button secondary" routerLink="/login">Acesso do supervisor</a>
+      }
+    }
+  </main>
+  <footer>LogTrack · Operação RFID</footer>
+</div>

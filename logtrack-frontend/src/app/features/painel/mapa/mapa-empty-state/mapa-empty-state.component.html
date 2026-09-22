@@ -1,0 +1,12 @@
+<div class="empty-panel">
+  <div class="empty-inner">
+    <div class="empty-icon"><svg lucideUpload [size]="28"></svg></div>
+    <h2>Nenhuma planta enviada</h2>
+    <p>Envie uma imagem da planta do armazém (PNG ou JPG) para começar a posicionar zonas, portais e textos sobre ela.</p>
+    <label class="button">
+      <svg lucideUpload [size]="15"></svg>{{ busy ? 'Enviando…' : 'Fazer upload da planta' }}
+      <input type="file" accept="image/png,image/jpeg" hidden [disabled]="busy" (change)="onFileChange($event)"/>
+    </label>
+    <small>PNG ou JPG · até 10 MB</small>
+  </div>
+</div>

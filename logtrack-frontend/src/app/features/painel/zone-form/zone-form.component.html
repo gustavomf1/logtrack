@@ -1,0 +1,11 @@
+<app-back-link href="/zonas">Voltar para zonas</app-back-link>
+<app-page-title [title]="zone() ? 'Editar zona' : 'Nova zona'" description="Defina uma área física para localizar seus lotes."></app-page-title>
+<form class="panel management-form" (submit)="submit($event)">
+  <label>Nome da zona<input name="nome" required maxlength="100" [value]="zone()?.nome" placeholder="Ex.: Zona D — Qualidade"/></label>
+  <label>Descrição<textarea name="descricao" maxlength="2000" rows="3" [value]="zone()?.descricao || ''" placeholder="O que acontece nesta área?"></textarea></label>
+  @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+  <div class="form-actions">
+    <a class="button secondary" routerLink="/zonas">Cancelar</a>
+    <button class="button primary" [disabled]="busy()">{{ busy() ? 'Salvando...' : 'Salvar zona' }}</button>
+  </div>
+</form>
