@@ -23,6 +23,9 @@ public class LoteService {
     @Inject
     LogtrackConfig config;
 
+    @Inject
+    com.logtrack.backend.repository.MovimentacaoRepository movimentacaoRepository;
+
     public List<LoteResponseDTO> list(String zona, String status, String busca) {
         return LoteFilter.apply(repository.listAll(), zona, status, busca).stream()
             .map(l -> toDTO(l, null))
@@ -31,8 +34,9 @@ public class LoteService {
 
     public LoteDetailResponseDTO get(UUID id) {
         Lote lote = repository.findByIdOptional(id).orElseThrow(() -> new AppException(404, "Lote não encontrado."));
-        // Task 8 substitui List.of() pelo histórico real via MovimentacaoRepository.
-        return toDetailDTO(lote, List.of());
+        var historico = com.logtrack.backend.util.HistoryBuilder.build(
+            movimentacaoRepository.listByLoteOrderByTimestampDesc(id, 5));
+        return toDetailDTO(lote, historico);
     }
 
     public LotePublicoResponseDTO getPublico(UUID id) {
