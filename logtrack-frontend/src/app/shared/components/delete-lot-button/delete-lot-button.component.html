@@ -1,0 +1,13 @@
+<button type="button" [class]="compact ? 'icon-button delete-lot-button' : 'button danger'" [attr.aria-label]="'Excluir lote ' + lot.codigo" title="Excluir lote" (click)="open()">
+  <svg lucideTrash2 [size]="17"></svg>@if (!compact) { Excluir lote }
+</button>
+<dialog #dialog class="delete-lot-dialog" [attr.aria-label]="'Excluir lote ' + lot.codigo" (cancel)="cancelDialog($event)">
+  <span class="delete-lot-icon"><svg lucideTrash2 [size]="25"></svg></span>
+  <h2>Excluir lote {{ lot.codigo }}?</h2>
+  <p>O lote será removido do estoque e não poderá receber novas movimentações. Seu histórico será preservado para consulta.</p>
+  @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+  <div class="form-actions">
+    <button type="button" class="button secondary" autofocus [disabled]="busy()" (click)="close()">Cancelar</button>
+    <button type="button" class="button danger" [disabled]="busy()" (click)="remove()">{{ busy() ? 'Excluindo...' : 'Confirmar exclusão' }}</button>
+  </div>
+</dialog>

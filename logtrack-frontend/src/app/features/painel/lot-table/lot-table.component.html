@@ -1,0 +1,39 @@
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Lote / descrição</th><th>Zona atual</th><th>Quantidade</th><th>Validade</th><th>Etiqueta RFID</th><th>Última movimentação</th>
+        @if (!readOnly) { <th>Ações</th> }
+      </tr>
+    </thead>
+    <tbody>
+      @for (l of lots; track l.id) {
+        <tr>
+          <td>
+            <a class="lot-cell" [routerLink]="['/lotes', l.id]">
+              <span class="lot-icon"><svg lucidePackage [size]="18"></svg></span>
+              <span><strong>{{ l.codigo }}</strong><small>{{ l.descricao || 'Sem descrição' }}</small></span>
+            </a>
+          </td>
+          <td><span [class]="'badge ' + (l.zonaAtualId ? 'blue' : 'gray')"><span class="badge-dot"></span>{{ l.zonaAtualId | zoneName:data.zonas }}</span></td>
+          <td>{{ l.quantidade !== null ? l.quantidade.toLocaleString('pt-BR') : '—' }}</td>
+          <td><span [class]="'expiry ' + (l.dataValidade | expiry)">
+            @if ((l.dataValidade | expiry) !== 'regular') { <svg lucideClock3 [size]="13"></svg> }
+            {{ l.dataValidade | datePtBr }}
+          </span></td>
+          <td><span [class]="'tag-status ' + (l.tagGravada ? 'tag-done' : '')"><svg lucideTag [size]="14"></svg>{{ l.tagGravada ? 'Gravada' : 'Pendente' }}</span></td>
+          <td class="muted">{{ lastMovement(l.id)?.timestamp | datetime }}</td>
+          @if (!readOnly) {
+            <td>
+              <div class="lot-row-actions">
+                <a class="icon-button" [attr.aria-label]="'Ver lote ' + l.codigo" [routerLink]="['/lotes', l.id]"><svg lucideArrowUpRight [size]="17"></svg></a>
+                <app-delete-lot-button [lot]="l" [compact]="true"></app-delete-lot-button>
+              </div>
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (!lots.length) { <app-empty-state>Nenhum lote encontrado para esta seleção.</app-empty-state> }
+</div>

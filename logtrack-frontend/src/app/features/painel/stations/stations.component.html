@@ -1,0 +1,34 @@
+@if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+<app-page-title title="Portais" description="Uma estação para cada zona. Movimentações sem digitação.">
+  <a class="button primary" routerLink="/portais/novo"><svg lucidePlus [size]="17"></svg>Cadastrar portal</a>
+</app-page-title>
+@if (activation()) {
+  <div class="info-box activation-box" role="status">
+    <strong>Novo link de ativação</strong>
+    <p>O vínculo anterior foi invalidado. Abra este link no aparelho da estação.</p>
+    <app-copy-url [url]="activation()"></app-copy-url>
+  </div>
+}
+<div class="panel table-scroll">
+  <table>
+    <thead><tr><th>Estação</th><th>Zona vinculada</th><th>Última leitura</th><th>Status</th><th>Ações</th></tr></thead>
+    <tbody>
+      @for (c of data().portais; track c.id) {
+        <tr>
+          <td><div class="cell-title"><svg lucideSmartphone [size]="18"></svg><a [routerLink]="['/portais', c.id]">{{ c.nome }}</a></div></td>
+          <td>{{ c.zonaId | zoneName:data().zonas }}</td>
+          <td>{{ c.ultimoUso | datetime }}</td>
+          <td><span [class]="'badge ' + (c.ativo ? 'green' : 'gray')">{{ c.ativo ? 'Ativa' : 'Inativa' }}</span></td>
+          <td>
+            <div class="table-actions">
+              <button class="text-button" [disabled]="busy()" (click)="regenerate(c)">Regenerar token</button>
+              <button class="text-button" [disabled]="busy()" (click)="toggle(c)">{{ c.ativo ? 'Desativar' : 'Reativar' }}</button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (!data().portais.length) { <app-empty-state>Cadastre um portal e vincule-o a uma zona.</app-empty-state> }
+</div>
+<div class="info-box"><svg lucideRadio [size]="20"></svg><span>Abra o link de ativação no aparelho físico. Depois, basta aproximar uma etiqueta para registrar a movimentação.</span></div>

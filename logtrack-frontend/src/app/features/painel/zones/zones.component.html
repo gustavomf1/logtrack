@@ -1,0 +1,25 @@
+@if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+<app-page-title title="Zonas" description="Cada espaço, conectado à sua operação.">
+  <a class="button primary" routerLink="/zonas/nova"><svg lucidePlus [size]="17"></svg>Nova zona</a>
+</app-page-title>
+<div class="zone-grid">
+  @for (zone of data().zonas; track zone.id; let i = $index) {
+    <article class="panel zone-card">
+      <div class="card-top">
+        <span [class]="'zone-icon tone-' + (i % 3)"><svg lucideMapPin [size]="23"></svg></span>
+        <span [class]="'badge ' + (zone.ativa ? 'green' : 'gray')">{{ zone.ativa ? 'Ativa' : 'Inativa' }}</span>
+      </div>
+      <h2>{{ zone.nome }}</h2>
+      <p>{{ zone.descricao || 'Sem descrição' }}</p>
+      <div class="zone-counts">
+        <a [routerLink]="['/lotes']" [queryParams]="{ zona: zone.id }"><strong>{{ loteCount(zone.id) }}</strong> lotes</a>
+        <span><strong>{{ activeStationCount(zone.id) }}</strong> estações ativas</span>
+      </div>
+      <div class="card-actions">
+        <a class="text-link" [routerLink]="['/zonas', zone.id]">Editar zona <svg lucideArrowUpRight [size]="15"></svg></a>
+        <button class="text-button" [disabled]="busy()" (click)="toggle(zone)">{{ zone.ativa ? 'Desativar' : 'Reativar' }}</button>
+      </div>
+    </article>
+  }
+</div>
+@if (!data().zonas.length) { <app-empty-state>Cadastre a primeira zona do galpão.</app-empty-state> }

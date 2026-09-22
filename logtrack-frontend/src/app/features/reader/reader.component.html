@@ -1,0 +1,54 @@
+<div class="public-page">
+  <header><app-brand></app-brand><span class="public-label">LEITURA RFID</span></header>
+  <main class="reader-card">
+    <span class="eyebrow">IDENTIFICAÇÃO DO LOTE</span>
+    <h1>{{ result()?.lote?.codigo || 'Lote' }}</h1>
+    <p class="muted">{{ result() ? (result()!.lote.descricao || 'Sem descrição') : '' }}</p>
+
+    @if (error()) {
+      <div class="read-result error">
+        <svg lucideInfo [size]="32"></svg>
+        <h2>Não foi possível registrar</h2>
+        <p>{{ error() }}</p>
+        <small>Verifique a conexão antes de aproximar a etiqueta novamente.</small>
+      </div>
+    } @else if (!result()) {
+      <div class="read-result loading" role="status">
+        <svg lucideRadio class="pulse" [size]="38"></svg>
+        <h2>Processando leitura...</h2>
+        <p>Aguarde a confirmação da movimentação.</p>
+      </div>
+    } @else {
+      <div [class]="'read-result ' + result()!.modo.toLowerCase()" role="status">
+        @switch (result()!.modo) {
+          @case ('MOVIMENTO') { <svg lucideCheckCircle2 [size]="38"></svg> }
+          @case ('CANCELAMENTO') { <svg lucideUndo2 [size]="38"></svg> }
+          @default { <svg lucideInfo [size]="38"></svg> }
+        }
+        <h2>{{ result()!.mensagem }}</h2>
+        <p>{{ result()!.timestamp | datetime }}</p>
+      </div>
+      <div class="reader-details">
+        <div><svg lucideMapPin [size]="18"></svg><span>Zona atual<strong>{{ result()!.zona }}</strong></span></div>
+        <div><svg lucideClock [size]="18"></svg><span>Validade<strong>{{ result()!.lote.dataValidade | datePtBr }}</strong></span></div>
+        <div><span>Quantidade<strong>{{ result()!.lote.quantidade !== null ? result()!.lote.quantidade!.toLocaleString('pt-BR') : 'Não informada' }}</strong></span></div>
+        <div><span>Última movimentação<strong>{{ result()!.historico[0] ? (result()!.historico[0].timestamp | datetime) : 'Aguardando primeira leitura' }}</strong></span></div>
+      </div>
+      <details class="reader-history" open>
+        <summary>Últimas movimentações <span>{{ result()!.historico.length }}</span></summary>
+        @if (result()!.historico.length) {
+          @for (item of result()!.historico; track item.id) {
+            <div class="history-entry">
+              <span [class]="'timeline-dot ' + (item.tipo === 'CANCELAMENTO' ? 'amber' : '')"></span>
+              <div><strong>{{ item.origem }} → {{ item.destino }}</strong><p>{{ item.portal }}</p><small>{{ item.timestamp | datetime }}</small></div>
+            </div>
+          }
+        } @else {
+          <p class="empty-copy">Este lote ainda não foi movimentado.</p>
+        }
+      </details>
+    }
+    <noscript>Ative o JavaScript para registrar a leitura automaticamente.</noscript>
+  </main>
+  <footer>LogTrack · CTMAQ<br/><small>Rastreabilidade em cada aproximação.</small></footer>
+</div>

@@ -1,0 +1,28 @@
+<app-page-title title="Lotes" description="Localização, validade e histórico de cada lote.">
+  <a class="button primary" routerLink="/lotes/novo"><svg lucidePlus [size]="18"></svg>Novo lote</a>
+</app-page-title>
+@if (deleted()) {
+  <div class="info-box delete-success" role="status"><svg lucideCheckCircle2 [size]="18"></svg>Lote excluído com sucesso.</div>
+}
+<div class="panel">
+  <div class="filters">
+    <label class="search-field">
+      <svg lucideSearch [size]="18"></svg>
+      <input aria-label="Buscar lotes" placeholder="Buscar código ou descrição..." [ngModel]="search()" (ngModelChange)="search.set($event)"/>
+    </label>
+    <select aria-label="Filtrar por zona" [ngModel]="zone()" (ngModelChange)="zone.set($event)">
+      <option value="">Todas as zonas</option>
+      <option value="sem-zona">Sem Zona</option>
+      @for (z of data().zonas; track z.id) { <option [value]="z.id">{{ z.nome }}</option> }
+    </select>
+    <select aria-label="Filtrar por status" [ngModel]="status()" (ngModelChange)="status.set($event)">
+      <option value="">Todos os status</option>
+      <option value="regular">Validade regular</option>
+      <option value="proximo">Vence em até 30 dias</option>
+      <option value="vencido">Vencido</option>
+      <option value="sem-tag">Sem etiqueta gravada</option>
+    </select>
+  </div>
+  <app-lot-table [lots]="filtered()" [data]="data()"></app-lot-table>
+  <div class="panel-foot">{{ filtered().length }} lote(s) encontrado(s)</div>
+</div>

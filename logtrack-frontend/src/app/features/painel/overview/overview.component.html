@@ -1,0 +1,73 @@
+<app-page-title title="Visão geral" description="Acompanhe seus lotes. Mantenha tudo no lugar certo.">
+  @if (authenticated()) {
+    <a class="button secondary" routerLink="/lotes">Ver todos os lotes <svg lucideArrowUpRight [size]="16"></svg></a>
+    <a class="button primary" routerLink="/lotes/novo"><svg lucidePlus [size]="18"></svg>Novo lote</a>
+  }
+</app-page-title>
+
+<section class="overview-banner">
+  <div>
+    <span class="banner-kicker"><span class="live-dot"></span>{{ activeStations() }} {{ activeStations() === 1 ? 'estação conectada' : 'estações conectadas' }}</span>
+    <h2>Do físico ao digital.<br/>Sem perder o caminho.</h2>
+    <p>Cada aproximação conecta um lote à sua localização. Acompanhe o estoque em tempo real.</p>
+    <a routerLink="/ajuda">Veja como funciona</a>
+  </div>
+</section>
+
+<div class="ops-bar">
+  @for (m of metrics(); track m.label) {
+    <div [class]="'ops-metric ' + m.tone"><strong>{{ m.value.toLocaleString('pt-BR') }}</strong><span>{{ m.label }}</span><small>{{ m.note }}</small></div>
+  }
+</div>
+
+<div class="overview-columns">
+  <section class="panel">
+    <div class="panel-heading">
+      <div><h2>Distribuição por zona</h2><p>Onde seus lotes estão agora</p></div>
+      <a routerLink="/zonas" class="text-link">Ver zonas <svg lucideArrowUpRight [size]="15"></svg></a>
+    </div>
+    <div class="distribution">
+      @for (z of distribution(); track (z.id ?? 'none')) {
+        <a [routerLink]="['/lotes']" [queryParams]="{ zona: z.id || 'sem-zona' }" class="distribution-row">
+          <span [class]="'distribution-mark tone-' + z.tone"><svg lucideMapPin [size]="17"></svg></span>
+          <div>
+            <div class="distribution-label"><strong>{{ z.nome }}</strong><span>{{ z.count }} <small>lotes</small></span></div>
+            <div class="bar-track"><div [class]="'bar-fill tone-' + z.tone" [style.width.%]="z.width"></div></div>
+          </div>
+        </a>
+      }
+    </div>
+    <div class="panel-foot"><span class="live-dot"></span>{{ activeStations() }} estações ativas na operação</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">
+      <div><h2>Movimentações recentes</h2><p>Os últimos passos da sua operação</p></div>
+      <span class="soft-icon"><svg lucideArrowDownLeft [size]="20"></svg></span>
+    </div>
+    <div class="activity-list">
+      @for (m of recentMovements(); track m.id) {
+        <a class="activity-item" [routerLink]="['/lotes', m.loteId]">
+          <span [class]="'activity-icon ' + (m.tipo === 'CANCELAMENTO' ? 'amber' : 'green')"><svg lucideArrowRight [size]="17"></svg></span>
+          <div>
+            <strong>{{ loteCodigo(m.loteId) }}</strong>
+            <p>{{ m.tipo === 'CANCELAMENTO' ? 'Cancelado · Sem Zona' : (m.zonaDestinoId | zoneName:data().zonas) }}</p>
+            <small>{{ portalNome(m.portalId) }}</small>
+          </div>
+          <time>{{ m.timestamp | datetime }}</time>
+        </a>
+      }
+      @if (!recentMovements().length) { <app-empty-state>As movimentações aparecerão aqui após a primeira leitura RFID.</app-empty-state> }
+    </div>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-heading">
+    <div><h2>Lotes no estoque <span class="count-pill">{{ lots().length }}</span></h2><p>Rastreabilidade em cada item, do início ao fim</p></div>
+    <a routerLink="/lotes" class="text-link">Ver todos <svg lucideArrowRight [size]="16"></svg></a>
+  </div>
+  <app-lot-table [lots]="stockLots()" [data]="data()" [readOnly]="!authenticated()"></app-lot-table>
+</section>
+
+<app-live-notifications [data]="data()"></app-live-notifications>

@@ -1,0 +1,32 @@
+<app-back-link></app-back-link>
+<app-page-title title="Gravar etiqueta" [description]="lot().codigo + ' · ' + (lot().descricao || 'Lote cadastrado')"></app-page-title>
+<section class="panel nfc-writer">
+  <div class="nfc-write-icon"><svg lucideRadio [size]="45"></svg></div>
+  <h2>{{ phase() === 'done' ? 'Etiqueta gravada' : 'Seu lote, a uma aproximação de distância.' }}</h2>
+  <p>Grave o endereço abaixo na etiqueta RFID e cole-a no lote.</p>
+  <app-copy-url [url]="url"></app-copy-url>
+  @if (!supported) {
+    <div class="info-box">A gravação RFID não está disponível neste navegador. Abra esta mesma tela no Chrome de um Android com RFID, pelo endereço HTTPS do sistema.</div>
+  }
+  @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+  @if (phase() === 'done') {
+    <div role="status">
+      <svg lucideCheckCircle2 class="success-icon" [size]="34"></svg>
+      <p>Etiqueta gravada com sucesso. O lote está pronto para leitura.</p>
+      <a routerLink="/lotes" class="button primary">Voltar para lotes</a>
+    </div>
+  } @else if (phase() === 'written') {
+    <button class="button primary" (click)="markWritten()">Salvar confirmação novamente</button>
+  } @else {
+    <button class="button primary" [disabled]="!supported || phase() !== 'idle' || lot().arquivado" (click)="write()">
+      <svg lucideRadio [size]="18"></svg>{{ phase() === 'saving' ? 'Salvando...' : 'Gravar etiqueta' }}
+    </button>
+  }
+  <small>A leitura da etiqueta por um portal ativado registra a movimentação automaticamente.</small>
+</section>
+<dialog #dialog class="nfc-dialog" aria-labelledby="nfc-dialog-title" (cancel)="cancelWrite()">
+  <svg lucideRadio [size]="48" class="pulse"></svg>
+  <h2 id="nfc-dialog-title">Aproxime uma etiqueta RFID virgem do aparelho</h2>
+  <p>Mantenha a etiqueta próxima até a confirmação.</p>
+  <button class="button secondary" (click)="cancelWrite()">Cancelar gravação</button>
+</dialog>

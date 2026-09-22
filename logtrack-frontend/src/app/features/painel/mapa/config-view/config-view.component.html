@@ -1,0 +1,53 @@
+<div class="workspace-row">
+  <div class="elements-panel">
+    <div class="elements-heading">PORTAIS RFID</div>
+    @for (e of estacoes(); track e.portalId) {
+      <div class="el-item">
+        <svg lucideGripVertical class="grip" [size]="14"></svg>
+        <span class="el-icon"><svg lucideRadio [size]="12"></svg></span>
+        <div>
+          <input [value]="e.apelido || ''" [placeholder]="e.portalNome" (input)="renameEstacao(e.portalId, $any($event.target).value)"/>
+          <small>{{ e.portalNome }} · Zona: {{ e.zonaNome }}</small>
+        </div>
+      </div>
+    }
+    @if (unplaced().length > 0) { <div class="elements-heading">NÃO POSICIONADAS</div> }
+    @for (c of unplaced(); track c.id) {
+      <button class="el-add" (click)="addEstacao(c.id)"><svg lucidePlus [size]="14"></svg><span>{{ c.nome }}</span></button>
+    }
+
+    <div class="el-divider"></div>
+    <div class="elements-heading">TEXTOS</div>
+    @for (t of textos(); track t.id) {
+      <div class="el-item">
+        <svg lucideGripVertical class="grip" [size]="14"></svg>
+        <span class="el-icon"><svg lucideType [size]="12"></svg></span>
+        <div><input [value]="t.texto" (input)="renameTexto(t.id, $any($event.target).value)"/></div>
+      </div>
+    }
+    <button class="el-add" (click)="addTexto()"><svg lucidePlus [size]="14"></svg><span>Novo texto</span></button>
+
+    <div class="el-divider"></div>
+    <div class="elements-heading">ZONAS (LOTES)</div>
+    @for (z of zonasMapa(); track z.zonaId) {
+      <div class="el-item">
+        <svg lucideGripVertical class="grip" [size]="14"></svg>
+        <span class="el-icon"><svg lucideMapPin [size]="12"></svg></span>
+        <div><strong>{{ z.zonaNome }}</strong><small>{{ loteCounts().get(z.zonaId) ?? 0 }} lotes</small></div>
+      </div>
+    }
+    @if (unplacedZonas().length > 0) { <div class="elements-heading">NÃO POSICIONADAS</div> }
+    @for (z of unplacedZonas(); track z.id) {
+      <button class="el-add" (click)="addZona(z.id)"><svg lucidePlus [size]="14"></svg><span>{{ z.nome }}</span></button>
+    }
+  </div>
+
+  <div class="map-panel">
+    @if (error()) { <div class="form-error" style="position:absolute;top:12px;left:12px;right:12px;z-index:2">{{ error() }}</div> }
+    <div #stageContainer style="background:#0e1218;border-radius:4px"></div>
+  </div>
+
+  <div class="form-actions" style="grid-column: 1 / -1">
+    <button class="button primary" [disabled]="busy()" (click)="save()"><svg lucideSave [size]="15"></svg>{{ busy() ? 'Salvando…' : 'Salvar' }}</button>
+  </div>
+</div>

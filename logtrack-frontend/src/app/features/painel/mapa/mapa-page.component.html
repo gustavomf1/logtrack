@@ -1,0 +1,18 @@
+<app-page-title title="Mapa da empresa" description="Acompanhe zonas, portais RFID e lotes na planta do armazém.">
+  <div class="mode-toggle">
+    <button [class]="mode() === 'operacional' ? 'active' : ''" (click)="mode.set('operacional')">OPERACIONAL</button>
+    <button [class]="mode() === 'configuracao' ? 'active' : ''" (click)="mode.set('configuracao')">CONFIGURAÇÃO</button>
+  </div>
+</app-page-title>
+@if (error()) { <div class="form-error">{{ error() }}</div> }
+@if (!loading()) {
+  @if (!mapaData()?.imagemUrl) {
+    <app-mapa-empty-state [busy]="busy()" (uploadFile)="upload($event)"></app-mapa-empty-state>
+  }
+  @if (mapaData()?.imagemUrl && mode() === 'operacional') {
+    <app-operational-view [mapaData]="mapaData()!" [data]="data()"></app-operational-view>
+  }
+  @if (mapaData()?.imagemUrl && mode() === 'configuracao') {
+    <app-config-view [mapaData]="mapaData()!" [data]="data()" (saved)="onSaved()"></app-config-view>
+  }
+}
