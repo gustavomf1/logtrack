@@ -1,3 +1,9 @@
+#
+# Local fully-containerized dev run. The backend intentionally runs with
+# QUARKUS_PROFILE=dev so DevDataSeeder creates demo data and the gitignored
+# dev JWT keypair bundled in the jar is used. Real deployments should use the
+# prod profile and supply JWT keys/secrets via env/volumes.
+#
 services:
   db:
     image: postgres:16
