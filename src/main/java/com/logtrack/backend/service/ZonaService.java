@@ -20,6 +20,12 @@ public class ZonaService {
     @Inject
     ZonaRepository repository;
 
+    @Inject
+    com.logtrack.backend.repository.LoteRepository loteRepository;
+
+    @Inject
+    com.logtrack.backend.repository.PortalRepository portalRepository;
+
     public List<ZonaResponseDTO> list() {
         return repository.listAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
@@ -56,6 +62,9 @@ public class ZonaService {
     @Transactional
     public ZonaResponseDTO deactivate(UUID id) {
         Zona zona = repository.findByIdOptional(id).orElseThrow(() -> new AppException(404, "Zona não encontrada."));
+        if (loteRepository.existsAtivoByZonaAtual(id) || portalRepository.existsActiveByZona(id)) {
+            throw new AppException(409, "Mova os lotes e desative as estações antes de desativar a zona.");
+        }
         zona.setAtiva(false);
         return toDTO(zona);
     }

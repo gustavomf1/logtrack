@@ -76,4 +76,24 @@ class ZonaResourceTest {
     void withoutTokenReturns401() {
         given().when().get("/api/zonas").then().statusCode(401);
     }
+
+    @Test
+    void deactivateBlockedWhenZonaHasActivePortal() {
+        String auth = token();
+        String zonaId = given().header("Authorization", "Bearer " + auth)
+            .contentType("application/json")
+            .body("{\"nome\":\"Zona Bloqueio " + System.nanoTime() + "\"}")
+            .when().post("/api/zonas")
+            .then().statusCode(200).extract().path("id");
+
+        given().header("Authorization", "Bearer " + auth)
+            .contentType("application/json")
+            .body("{\"nome\":\"Portal Bloqueio\",\"zonaId\":\"" + zonaId + "\"}")
+            .when().post("/api/portais")
+            .then().statusCode(200);
+
+        given().header("Authorization", "Bearer " + auth)
+            .when().delete("/api/zonas/" + zonaId)
+            .then().statusCode(409);
+    }
 }
