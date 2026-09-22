@@ -42,12 +42,32 @@ class AtivacaoResourceTest {
     void validTokenRedirectsAndSetsCookie() {
         String activationToken = createPortalAndGetActivationToken(token());
 
-        given().redirects().follow(false)
+        String stationCookie = given().redirects().follow(false)
             .when().get("/ativar/" + activationToken)
             .then()
             .statusCode(302)
             .header("Location", containsString("/estacao?ativado=1"))
-            .cookie("logtrack_station", notNullValue());
+            .cookie("logtrack_station", notNullValue())
+            .extract().cookie("logtrack_station");
+
+        given().cookie("logtrack_station", stationCookie)
+            .when().get("/api/estacao")
+            .then()
+            .statusCode(200)
+            .body("vinculada", is(true))
+            .body("nome", is("Portal Ativacao"))
+            .body("zona", startsWith("Zona Ativacao "));
+    }
+
+    @Test
+    void stationStatusWithoutCookieIsNotLinked() {
+        given()
+            .when().get("/api/estacao")
+            .then()
+            .statusCode(200)
+            .body("vinculada", is(false))
+            .body("nome", nullValue())
+            .body("zona", nullValue());
     }
 
     @Test

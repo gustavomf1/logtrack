@@ -1,6 +1,6 @@
 # CLAUDE.md (logtrack-backend/)
 
-Backend Java (Quarkus, Java 21 - ver `<quarkus.platform.version>` no `pom.xml` pra versao exata) do LogTrack - rastreamento de lotes via RFID. Substitui as rotas `/api/*` da app Next.js antiga (`../logtrack/logtrack/`); o frontend e reescrito separadamente em Angular. Ver `../logtrack/logtrack/docs/superpowers/specs/2026-09-22-java-backend-design.md` para o desenho completo e `../logtrack/logtrack/docs/superpowers/plans/2026-09-22-backend-java-quarkus.md` para o plano de implementacao.
+Backend Java (Quarkus, Java 21 - ver `<quarkus.platform.version>` no `pom.xml` pra versao exata) do LogTrack - rastreamento de lotes via RFID. Substitui as rotas `/api/*` da app Next.js antiga (`../logtrack/`); o frontend Angular fica em `../logtrack-frontend/`. Ver `../logtrack/docs/superpowers/specs/2026-09-22-java-backend-design.md` para o desenho completo e `../logtrack/docs/superpowers/plans/2026-09-22-backend-java-quarkus.md` para o plano de implementacao.
 
 ## Rodando localmente
 
@@ -30,6 +30,7 @@ Pacotes **por camada** sob `com.logtrack.backend` (nao por feature) - segue o pa
 ## Endpoints
 
 - `POST /api/auth/login` - JWT Bearer para o painel.
+- `GET /api/estacao` - estado da estacao vinculada pelo cookie assinado (publico).
 - `GET /api/painel` - dashboard agregado (autenticado).
 - `GET/POST /api/zonas`, `PATCH/DELETE /api/zonas/{id}` (autenticado).
 - `GET/POST /api/portais`, `PATCH/DELETE /api/portais/{id}`, `POST /api/portais/{id}/regenerar-token` (autenticado).
@@ -39,4 +40,4 @@ Pacotes **por camada** sob `com.logtrack.backend` (nao por feature) - segue o pa
 
 ## Contrato com o firmware - NAO QUEBRAR sem coordenar
 
-`POST /api/leituras` e `GET /ativar/{token}` nao usam JWT - usam o cookie de estacao (`logtrack_station`, HMAC-assinado) e checagem do header `Origin` contra `logtrack.backend-origin`. O firmware (`../logtrack/firmware/`) ainda aponta para a app Next.js antiga; ele precisara ser reapontado para este backend numa etapa futura, mas o contrato HTTP em si (rotas, formato do payload, nome do cookie, exigencia de `Origin`) tem que continuar identico.
+`POST /api/leituras` e `GET /ativar/{token}` nao usam JWT - usam o cookie de estacao (`logtrack_station`, HMAC-assinado) e checagem do header `Origin` contra `logtrack.backend-origin`. O firmware (`../firmware/`) ainda aponta para a app Next.js antiga; ele precisara ser reapontado para este backend numa etapa futura, mas o contrato HTTP em si (rotas, formato do payload, nome do cookie, exigencia de `Origin`) tem que continuar identico.

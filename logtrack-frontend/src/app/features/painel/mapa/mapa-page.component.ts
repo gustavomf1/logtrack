@@ -1,5 +1,6 @@
 import { Component, Inject, OnInit, computed, signal } from '@angular/core';
 import { ApiService, ApiError } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { PainelDataService } from '../painel-data.service';
 import { API_BASE_URL } from '../../../core/config';
 
@@ -19,6 +20,7 @@ export class MapaPageComponent implements OnInit {
 
   constructor(
     private readonly api: ApiService,
+    private readonly auth: AuthService,
     private readonly painelData: PainelDataService,
     @Inject(API_BASE_URL) private readonly base: string,
   ) {}
@@ -32,7 +34,12 @@ export class MapaPageComponent implements OnInit {
     try {
       const form = new FormData();
       form.append('planta', file);
-      const response = await fetch(this.base + '/api/mapa/planta', { method: 'POST', body: form, credentials: 'include' });
+      const token = this.auth.token();
+      const response = await fetch(this.base + '/api/mapa/planta', {
+        method: 'POST',
+        body: form,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const result = await response.json();
       if (!response.ok) throw new ApiError(result.error || 'Não foi possível enviar a imagem.');
       await this.painelData.refreshMapa();

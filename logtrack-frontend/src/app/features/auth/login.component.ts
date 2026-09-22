@@ -12,8 +12,9 @@ export class LoginComponent {
   readonly busy = signal(false);
   readonly error = signal('');
   readonly show = signal(false);
-  /** Com a API simulada, qualquer credencial entra; já deixa valores de exemplo preenchidos. */
-  readonly exemplo = environment.mockApi ? { email: 'supervisor@logtrack.com', senha: 'demo1234' } : { email: '', senha: '' };
+  readonly exemplo = environment.production
+    ? { email: '', senha: '' }
+    : { email: 'supervisor@logtrack.local', senha: 'LogTrack123!' };
 
   constructor(
     private readonly auth: AuthService,

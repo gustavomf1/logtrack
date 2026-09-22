@@ -4,11 +4,10 @@
  */
 export const environment = {
   production: false,
-  /** Vazio = mesma origem; o dev server encaminha /api para http://localhost:3000 (proxy.conf.json). */
-  apiBaseUrl: 'http://localhost:3000',
+  /** Mesma origem; o dev server encaminha /api e /uploads para o Quarkus na porta 8080. */
+  apiBaseUrl: '',
   /** Equivalentes a NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY. Vazios = tempo real desativado. */
   supabaseUrl: '',
   supabaseAnonKey: '',
-  /** TEMPORÁRIO: true = usa a API simulada (src/app/core/mock/mock-backend.ts) no lugar do backend real. */
-  mockApi: true,
+  mockApi: false,
 };
