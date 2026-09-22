@@ -5,11 +5,10 @@
  */
 export const environment = {
   production: true,
-  /** Origem do backend Next.js (API + NextAuth). Vazio = mesma origem do frontend. */
+  /** Origem do backend Quarkus. Vazio = mesma origem, via proxy/reverse proxy. */
   apiBaseUrl: '',
   /** Equivalentes a NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY. Vazios = tempo real desativado. */
   supabaseUrl: '',
   supabaseAnonKey: '',
-  /** TEMPORÁRIO: true = usa a API simulada (src/app/core/mock/mock-backend.ts) no lugar do backend real. */
-  mockApi: true,
+  mockApi: false,
 };
