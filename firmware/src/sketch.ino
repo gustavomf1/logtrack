@@ -32,37 +32,51 @@ bool estadoBotaoModoAnterior = HIGH;
 // Rede padrão da simulação do Wokwi (não precisa senha)
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
-// "localhost" não funciona aqui: dentro do simulador isso aponta pro próprio ESP32
-// virtual, não pro seu PC. Use uma URL pública (ex: tunnel cloudflared/ngrok) que
-// encaminhe para o seu servidor local, ou o host.wokwi.internal (Wokwi IoT Gateway).
-// Cada sensor de zona é o mesmo firmware — só o setupUrl muda, embutido via build
-// flag -D SETUP_URL na env do PlatformIO (veja platformio.ini: env:zona-a/b/c).
-#ifndef SETUP_URL
-#define SETUP_URL "https://logtrack-self.vercel.app/ativar/2fa2fb5a3ee14741b23f0720160bf385485d9506355f205982b2b6a4d54141df"
-#endif
-const char* setupUrl = SETUP_URL;
 
-// A API rejeita POST cujo header Origin não bate com NEXTAUTH_URL do backend (proteção
-// contra CSRF em src/app/api/[...resource]/route.ts) — isso é fixo, não é a URL do tunnel.
-const char* backendOrigin = "https://logtrack-self.vercel.app";
+// backendHost é o endereço que o ESP32 REALMENTE consegue alcançar (usado tanto pra
+// autenticar quanto pra enviar leituras) — pode ser diferente do valor "lógico" que o
+// backend espera ver no header Origin (backendOrigin, abaixo). "localhost" não funciona
+// aqui dentro do simulador: isso aponta pro próprio ESP32 virtual, não pro seu PC. Use
+// host.wokwi.internal (gateway do Wokwi pro host, confirme na doc do Wokwi que sua versão
+// suporta) ou uma URL pública (tunnel cloudflared/ngrok) apontando pro backend Quarkus.
+// Pra hardware real na mesma rede, normalmente é o IP LAN da máquina rodando o backend.
+#ifndef BACKEND_HOST
+#define BACKEND_HOST "http://localhost:8080"
+#endif
+const char* backendHost = BACKEND_HOST;
+
+// Token de ativação do portal desta zona (um por env do firmware — veja platformio.ini:
+// env:zona-a/b/c, gerado/hasheado em DevDataSeeder no backend). setupUrl é montado em
+// runtime a partir de backendHost + esse token, não mais como uma URL fixa só.
+#ifndef PORTAL_TOKEN
+#define PORTAL_TOKEN "cc613c7959d0f0a0eaf5196f307ae667b1fc4f5361c21614722f40784d1eab03"
+#endif
+const char* portalToken = PORTAL_TOKEN;
+String setupUrl; // montada em setup(): backendHost + "/ativar/" + portalToken
+
+// A API rejeita POST cujo header Origin não bater EXATAMENTE com logtrack.backend-origin
+// configurado no backend Quarkus (OriginGuard, proteção contra CSRF) — isso é o valor
+// lógico do backend, não necessariamente o endereço de rede usado pra alcançá-lo (esse é
+// backendHost, acima). Se mudar LOGTRACK_BACKEND_ORIGIN no backend, mude aqui também.
+const char* backendOrigin = "http://localhost:8080";
 
 const char* queueFile = "/fila.jsonl";
 
 struct TagLote {
   const char* tagId;
-  const char* url; // página do lote; usamos só para extrair o loteId
+  const char* loteId; // UUID do lote no backend Quarkus (tabela lotes, seed fixo em DevDataSeeder)
 };
 
 const TagLote tagsLotes[] = {
-  { "01020304", "https://logtrack-self.vercel.app/l/e2a57714-d356-4126-b08b-3513502ff43f" }, // LT-2026-0005
-  { "11223344", "https://logtrack-self.vercel.app/l/70051fa4-923e-4dec-ba4e-e3bc0a351858" }, // LT-2026-0002
-  { "55667788", "https://logtrack-self.vercel.app/l/037d275a-3655-47e3-bd46-5c7b42fb95ac" }, // LT-2026-0003
-  { "AABBCCDD", "https://logtrack-self.vercel.app/l/fe6c018b-82ee-4c82-a835-a527d26ae744" }, // LT-2026-0004
+  { "01020304", "9c672cd2-dc86-4f94-8c5b-7662675c18f8" }, // LOTE-001
+  { "11223344", "d897e388-6d2f-41c6-8f5e-0844f27cd161" }, // LOTE-002
+  { "55667788", "eb75d176-55b8-4585-9cdc-413cf85cd308" }, // LOTE-003
+  { "AABBCCDD", "33910e43-3ecf-4796-9291-d26de847a3ec" }, // LOTE-004
 };
 const int NUM_TAGS_LOTES = sizeof(tagsLotes) / sizeof(tagsLotes[0]);
 
 String stationCookie = ""; // cookie de sessão obtido em setupUrl, reenviado em toda leitura
-String loteId = "";        // extraído da url do lote associado à tag lida, a cada leitura
+String loteId = "";        // UUID do lote associado à tag lida, resolvido a cada leitura
 String apiOrigin = "";     // schema://host:porta do backend (igual pra todos os lotes)
 
 // stationCookie e toda chamada HTTPClient (autenticarEstacao/enviarLeitura/reenviarFila)
@@ -86,7 +100,8 @@ unsigned long ultimaLeituraMillis = 0;
 void setup() {
   Serial.begin(115200);
 
-  apiOrigin = backendOrigin;
+  setupUrl = String(backendHost) + "/ativar/" + portalToken;
+  apiOrigin = backendHost;
 
   // LEDs e botão de modo primeiro: dão feedback visual mesmo que o RC522 trave/demore
   // pra inicializar (com várias boards RC522 juntas numa simulação só, a sim pode ficar
@@ -210,16 +225,10 @@ String lerUID(byte *buffer, byte bufferSize) {
 }
 #endif
 
-String extrairLoteId(const char* url) {
-  String s(url);
-  int barra = s.lastIndexOf('/');
-  return barra == -1 ? s : s.substring(barra + 1);
-}
-
 bool buscarLoteParaTag(const String& tagId, String& loteIdEncontrado) {
   for (int i = 0; i < NUM_TAGS_LOTES; i++) {
     if (tagId.equalsIgnoreCase(tagsLotes[i].tagId)) {
-      loteIdEncontrado = extrairLoteId(tagsLotes[i].url);
+      loteIdEncontrado = tagsLotes[i].loteId;
       return true;
     }
   }
