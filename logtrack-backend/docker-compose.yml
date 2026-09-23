@@ -1,8 +1,11 @@
 #
 # Local fully-containerized dev run. The backend intentionally runs with
-# QUARKUS_PROFILE=dev so DevDataSeeder creates demo data and the gitignored
-# dev JWT keypair bundled in the jar is used. Real deployments should use the
-# prod profile and supply JWT keys/secrets via env/volumes.
+# QUARKUS_PROFILE=dev so DevDataSeeder creates demo data and dev-privateKey.pem/
+# dev-publicKey.pem are used for JWT (see application.properties) - a packaged jar
+# doesn't get Quarkus's dev-mode auto-generated ephemeral keypair, only `quarkus:dev`
+# does. Those .pem files are gitignored: run ./scripts/gen-dev-jwt-keys.sh once per
+# checkout before the first `docker compose up`, or login fails with SRJWT05021.
+# Real deployments should use the prod profile and supply JWT keys/secrets via env/volumes.
 #
 services:
   db:

@@ -2,3 +2,10 @@
 version = 1
 firmware = '../../.pio/build/zona-b/wokwi-firmware.bin'
 elf = '../../.pio/build/zona-b/firmware.elf'
+
+# Ativa o Private IoT Gateway embutido do Wokwi for VS Code - sem isso, host.wokwi.internal
+# (usado no BACKEND_HOST do sketch pra alcançar o backend rodando no seu PC) não resolve
+# pra lugar nenhum e a conexão cai com "Connection reset by peer".
+# https://github.com/wokwi/wokwigw#usage
+[net]
+gateway = "ws://localhost:9011"

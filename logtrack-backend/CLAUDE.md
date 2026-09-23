@@ -8,6 +8,8 @@ Backend Java (Quarkus, Java 21 - ver `<quarkus.platform.version>` no `pom.xml` p
 
 ## Rodando com Docker Compose
 
+Antes da primeira vez, gere a keypair JWT de dev (uma vez por checkout, os `.pem` sao gitignored - ver `.gitignore`): `./scripts/gen-dev-jwt-keys.sh`. Sem isso o login falha com `SRJWT05021` - `./mvnw quarkus:dev` nao precisa disso porque o Quarkus gera uma chave efemera sozinho em live coding, mas um jar ja empacotado (Docker, `java -jar`) nao tem essa geracao automatica.
+
 `docker compose up -d --build` - sobe o backend empacotado + Postgres persistente (porta 55434 no host), com o mesmo seed de dados de demonstracao. Ver comentario no topo de `docker-compose.yml` para por que o container roda no profile `dev`.
 
 ## Testes
@@ -40,4 +42,4 @@ Pacotes **por camada** sob `com.logtrack.backend` (nao por feature) - segue o pa
 
 ## Contrato com o firmware - NAO QUEBRAR sem coordenar
 
-`POST /api/leituras` e `GET /ativar/{token}` nao usam JWT - usam o cookie de estacao (`logtrack_station`, HMAC-assinado) e checagem do header `Origin` contra `logtrack.backend-origin`. O firmware (`../firmware/`) ainda aponta para a app Next.js antiga; ele precisara ser reapontado para este backend numa etapa futura, mas o contrato HTTP em si (rotas, formato do payload, nome do cookie, exigencia de `Origin`) tem que continuar identico.
+`POST /api/leituras` e `GET /ativar/{token}` nao usam JWT - usam o cookie de estacao (`logtrack_station`, HMAC-assinado) e checagem do header `Origin` contra `logtrack.backend-origin`. O firmware (`../firmware/`) ja aponta para este backend (ver `firmware/CLAUDE.md`, secao "Backend integration") - os 5 lotes e os tokens de ativacao dos 3 portais de demo em `DevDataSeeder` sao fixos de proposito (nao gerados aleatoriamente) para que o firmware compilado com os defaults de `platformio.ini` continue funcionando entre reseeds. Qualquer mudanca no contrato HTTP (rotas, formato do payload, nome do cookie, exigencia de `Origin`) tem que ser coordenada com o firmware.
