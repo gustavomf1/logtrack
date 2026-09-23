@@ -38,6 +38,7 @@ Pacotes **por camada** sob `com.logtrack.backend` (nao por feature) - segue o pa
 - `GET/POST /api/portais`, `PATCH/DELETE /api/portais/{id}`, `POST /api/portais/{id}/regenerar-token` (autenticado).
 - `GET/POST /api/lotes`, `GET/PATCH/DELETE /api/lotes/{id}`, `POST /api/lotes/{id}/gravar-tag` (autenticado); `GET /api/lotes/publico/{id}` (publico).
 - `GET/PUT /api/mapa`, `POST /api/mapa/planta` (autenticado); `GET /uploads/{filename}` (publico).
+- `GET /api/eventos` (publico, SSE) - stream de `MovementEventDTO` (`loteId`/`zonaOrigemId`/`zonaDestinoId`/`portalId`/`tipo`/`timestamp`), disparado por `LeituraService` via `Event<MovementEventDTO>` + `EventoBroadcaster` (`@Observes(during = AFTER_SUCCESS)`, so depois do commit) sempre que uma leitura resulta em MOVIMENTO/CANCELAMENTO (nunca CONSULTA/replay). Espelha `broadcastMovement` de `../logtrack/src/lib/realtime.ts`, so que via SSE em vez de Supabase Realtime. Sem auth de proposito - payload so tem UUIDs, e `EventSource` nativo do browser nao manda header `Authorization`.
 - `GET /q/health`, `GET /q/openapi` (Swagger UI em `/q/swagger-ui`).
 
 ## Contrato com o firmware - NAO QUEBRAR sem coordenar

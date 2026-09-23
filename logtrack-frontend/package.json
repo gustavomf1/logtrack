@@ -18,7 +18,6 @@
     "@angular/platform-browser": "^22.1.0",
     "@angular/router": "^22.1.0",
     "@lucide/angular": "^1.47.0",
-    "@supabase/supabase-js": "^2.117.0",
     "@tailwindcss/postcss": "^4.3.3",
     "konva": "^10.6.0",
     "postcss": "^8.5.28",
