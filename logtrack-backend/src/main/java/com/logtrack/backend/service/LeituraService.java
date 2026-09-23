@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logtrack.backend.common.AppException;
 import com.logtrack.backend.dto.HistoricoItemDTO;
 import com.logtrack.backend.dto.LeituraRequestDTO;
+import com.logtrack.backend.dto.MovementEventDTO;
 import com.logtrack.backend.dto.ReadResultDTO;
 import com.logtrack.backend.entity.Leitura;
 import com.logtrack.backend.entity.Lote;
@@ -18,6 +19,7 @@ import com.logtrack.backend.util.ExpiryCalculator;
 import com.logtrack.backend.util.HistoryBuilder;
 import com.logtrack.backend.util.MovementDecision;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -55,6 +57,9 @@ public class LeituraService {
 
     @Inject
     LoteService loteService;
+
+    @Inject
+    Event<MovementEventDTO> movementEvent;
 
     @Transactional
     public ReadResultDTO registrar(LeituraRequestDTO request, String stationCookieValue) {
@@ -102,6 +107,15 @@ public class LeituraService {
             lote.setUltimoPortal(portal);
             portal.setUltimoUso(timestamp);
             modo = decision.tipo();
+
+            movementEvent.fire(MovementEventDTO.builder()
+                .loteId(lote.getId())
+                .zonaOrigemId(movimentacao.getZonaOrigem() != null ? movimentacao.getZonaOrigem().getId() : null)
+                .zonaDestinoId(movimentacao.getZonaDestino() != null ? movimentacao.getZonaDestino().getId() : null)
+                .portalId(portal.getId())
+                .tipo(decision.tipo())
+                .timestamp(timestamp)
+                .build());
         } else {
             modo = "CONSULTA";
         }
