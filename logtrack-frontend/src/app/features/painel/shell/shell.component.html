@@ -1,0 +1,65 @@
+<div class="app-shell">
+  <aside [class]="'sidebar ' + (open() ? 'sidebar-open' : '')">
+    <div class="sidebar-brand">
+      <app-brand [light]="true"></app-brand>
+      <button class="mobile-close icon-button" (click)="open.set(false)" aria-label="Fechar menu"><svg lucideX [size]="20"></svg></button>
+    </div>
+    <div class="workspace-label">
+      <span class="workspace-avatar">C</span>
+      <div><strong>CTMAQ</strong><small>Logística industrial</small></div>
+      <span class="workspace-status"></span>
+    </div>
+    <div class="nav-caption">WORKSPACE</div>
+    <nav>
+      <a routerLink="/" (click)="closeMenu()" [class]="isActive('/') ? 'nav-link active' : 'nav-link'">
+        <svg lucideLayoutDashboard [size]="19"></svg>Visão geral
+        <span class="nav-active-dot"></span>
+      </a>
+      <a routerLink="/mapa" (click)="closeMenu()" [class]="isActive('/mapa') ? 'nav-link active' : 'nav-link'">
+        <svg lucideMap [size]="19"></svg>Mapa
+      </a>
+      <a routerLink="/portais" (click)="closeMenu()" [class]="isActive('/portais') ? 'nav-link active' : 'nav-link'">
+        <svg lucideSmartphone [size]="19"></svg>Portais
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="nfc-tip">
+        <span class="tip-icon"><svg lucideRadio [size]="20"></svg></span>
+        <strong>Conecte o físico ao digital.</strong>
+        <p>Uma aproximação. Seu estoque no lugar certo.</p>
+        <a routerLink="/ajuda">Conhecer o fluxo RFID <svg lucideArrowUpRight [size]="15"></svg></a>
+      </div>
+      <a class="nav-link" routerLink="/ajuda"><svg lucideCircleHelp [size]="19"></svg>Central de ajuda</a>
+      @if (auth.session()) {
+        <button class="nav-link logout" (click)="logout()"><svg lucideLogOut [size]="18"></svg>Sair da conta</button>
+      } @else {
+        <a class="nav-link" routerLink="/login"><svg lucideLogIn [size]="18"></svg>Entrar</a>
+      }
+      <div class="sidebar-foot">LogTrack <span>v1.0</span></div>
+    </div>
+  </aside>
+  @if (open()) { <button class="menu-scrim" aria-label="Fechar navegação" (click)="open.set(false)"></button> }
+  <div class="main-shell">
+    <header class="topbar">
+      <div class="breadcrumb">
+        <button class="mobile-menu icon-button" (click)="open.set(true)" aria-label="Abrir menu"><svg lucideMenu [size]="22"></svg></button>
+        <span>Workspace</span><span class="crumb-divider">/</span><strong>{{ title() }}</strong>
+      </div>
+      <div class="topbar-right">
+        @if (auth.session(); as session) {
+          <div class="profile">
+            <span class="avatar">{{ name().slice(0, 2).toUpperCase() }}</span>
+            <div><strong>{{ name() }}</strong><small>Supervisor</small></div>
+          </div>
+        } @else {
+          <a class="button secondary" routerLink="/login">Entrar</a>
+        }
+      </div>
+    </header>
+    <main class="main-content"><router-outlet></router-outlet></main>
+    <footer class="main-footer">
+      <span>LogTrack · Rastreabilidade que acompanha sua operação.</span>
+      <span>CTMAQ / Logística e Almoxarifado</span>
+    </footer>
+  </div>
+</div>

@@ -1,0 +1,22 @@
+<app-page-title title="Um toque. Tudo localizado." description="Conheça o fluxo de rastreamento do LogTrack."></app-page-title>
+<div class="help-grid">
+  @for (step of steps; track step.n) {
+    <article class="panel help-step">
+      <span>{{ step.n }}</span>
+      <h2>{{ step.title }}</h2>
+      <p>{{ step.text }}</p>
+      <a class="text-link" [routerLink]="step.href">{{ step.label }}<svg lucideArrowRight [size]="16"></svg></a>
+    </article>
+  }
+</div>
+<section class="panel help-rules">
+  <h2>Como a movimentação funciona</h2>
+  <p><strong>Lote Sem Zona:</strong> vai para a zona do portal que fez a leitura.</p>
+  <p><strong>Nova leitura pelo mesmo portal:</strong> cancela a movimentação e volta para Sem Zona.</p>
+  <p><strong>Leitura por outro portal:</strong> vai para a zona desse outro portal, mesmo que ambos pertençam à mesma zona.</p>
+  <p><strong>Portal sem vínculo ativo:</strong> abre somente para consulta.</p>
+  <div class="info-box"><svg lucideTriangleAlert [size]="21"></svg><span>Cada nova abertura ou atualização da página do lote em um portal ativado conta como uma leitura. Aguarde o resultado antes de aproximar novamente.</span></div>
+  <h2>Para gravar etiquetas</h2>
+  <p>Use Chrome no Android com RFID ativado e acesse o sistema por HTTPS. A gravação exige permissão do navegador. No computador, copie a URL e abra a tela de gravação no aparelho do supervisor.</p>
+  <p>Se um portal for perdido ou substituído, desative a estação ou regenere seu token na tela de portais.</p>
+</section>

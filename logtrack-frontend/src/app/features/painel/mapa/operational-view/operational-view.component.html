@@ -1,0 +1,20 @@
+<div class="map-panel">
+  <div class="live-indicator"><span class="live-dot"></span>ATUALIZADO {{ highlight() ? 'AGORA' : '—' }}</div>
+  <div class="plan-frame">
+    @if (mapaData.imagemUrl) { <img [src]="mapaData.imagemUrl" [alt]="mapaData.nome"/> }
+    @for (z of zoneMarkers(); track z.zonaId) {
+      <div [class]="'map-zone-card' + (highlight()?.zonaId === z.zonaId ? ' highlight' : '')" [style.left.%]="z.x * 100" [style.top.%]="z.y * 100">
+        <span>{{ z.nome.toUpperCase() }}</span>
+        <strong>{{ z.count }}<small>lotes</small></strong>
+      </div>
+    }
+    @for (t of mapaData.textos; track t.id) {
+      <div class="text-label" [style.left.%]="t.x * 100" [style.top.%]="t.y * 100">{{ t.texto }}</div>
+    }
+    @for (e of mapaData.estacoes; track e.id) {
+      <div [class]="'portal' + (highlight()?.portalId === e.portalId ? ' highlight' : '')" [style.left.%]="e.x * 100" [style.top.%]="e.y * 100">
+        <svg lucideRadio [size]="15"></svg>
+      </div>
+    }
+  </div>
+</div>

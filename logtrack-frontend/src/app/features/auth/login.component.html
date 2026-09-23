@@ -1,0 +1,28 @@
+<div class="login-page">
+  <div class="login-card">
+    <section class="login-hero">
+      <img src="logtrack-login.png" alt="LogTrack — Rastreamento inteligente para o seu armazém" />
+    </section>
+    <section class="login-form-section">
+      <div class="login-top-brand"><app-brand></app-brand></div>
+      <div class="login-form-wrap">
+        <h2>Bem-vindo de volta</h2>
+        <p>Informe seu e-mail e senha para acessar o painel</p>
+        <form (submit)="submit($event)">
+          <label>E-mail<input name="email" type="email" [value]="exemplo.email" placeholder="seu@email.com" required autocomplete="username"/></label>
+          <label>Senha
+            <div class="password-field">
+              <input name="password" [value]="exemplo.senha" [type]="show() ? 'text' : 'password'" placeholder="Digite sua senha" required autocomplete="current-password"/>
+              <button type="button" [attr.aria-label]="show() ? 'Ocultar senha' : 'Mostrar senha'" (click)="show.set(!show())">
+                @if (show()) { <svg lucideEyeOff [size]="18"></svg> } @else { <svg lucideEye [size]="18"></svg> }
+              </button>
+            </div>
+          </label>
+          @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+          <button class="button login-submit" [disabled]="busy()">{{ busy() ? 'Entrando...' : 'Entrar' }}</button>
+        </form>
+      </div>
+      <div class="login-security"><svg lucideShieldCheck [size]="15"></svg>Acesso exclusivo para supervisores autorizados</div>
+    </section>
+  </div>
+</div>

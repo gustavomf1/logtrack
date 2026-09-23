@@ -1,0 +1,31 @@
+<app-back-link href="/portais">Voltar para portais</app-back-link>
+<app-page-title [title]="station() ? 'Editar portal' : 'Cadastrar portal'" description="Vincule um portal a uma zona do galpão."></app-page-title>
+@if (activation()) {
+  <section class="panel management-form">
+    <svg lucideCheckCircle2 class="success-icon" [size]="40"></svg>
+    <h2>Portal cadastrado</h2>
+    <p>Abra este link no Chrome do aparelho que será a estação. Guarde-o para uma futura reativação.</p>
+    <app-copy-url [url]="activation()"></app-copy-url>
+    <div class="info-box">Depois da ativação, adicione a página da estação à tela inicial do aparelho.</div>
+    <a class="button primary" routerLink="/portais">Ver portais</a>
+  </section>
+} @else {
+  <form class="panel management-form" (submit)="submit($event)">
+    <label>Nome do portal<input name="nome" required maxlength="100" [value]="station()?.nome" placeholder="Ex.: Portal 4 — Qualidade"/></label>
+    <label>Zona vinculada
+      <select name="zonaId" required [value]="station()?.zonaId || ''" [disabled]="!!station()">
+        <option value="" disabled>Selecione uma zona</option>
+        @for (z of zoneOptions(); track z.id) { <option [value]="z.id">{{ z.nome }}</option> }
+      </select>
+    </label>
+    <div class="info-box"><svg lucideSmartphone [size]="21"></svg><span>A zona de uma estação é fixa. Para mudar de área, desative esta estação e cadastre outra.</span></div>
+    @if (!hasActiveZone() && !station()) {
+      <p>Cadastre uma <a class="text-link" routerLink="/zonas/nova">zona ativa</a> primeiro.</p>
+    }
+    @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+    <div class="form-actions">
+      <a class="button secondary" routerLink="/portais">Cancelar</a>
+      <button class="button primary" [disabled]="busy() || (!station() && !hasActiveZone())">{{ busy() ? 'Salvando...' : (station() ? 'Salvar alterações' : 'Cadastrar e gerar link') }}</button>
+    </div>
+  </form>
+}

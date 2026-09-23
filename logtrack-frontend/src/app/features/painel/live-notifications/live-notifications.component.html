@@ -1,0 +1,7 @@
+@if (toasts().length) {
+  <div class="toast-stack" role="status">
+    @for (t of toasts(); track t.id) {
+      <div class="toast"><svg lucideRadio [size]="16"></svg>{{ t.text }}</div>
+    }
+  </div>
+}

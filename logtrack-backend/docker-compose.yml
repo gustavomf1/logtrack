@@ -1,0 +1,46 @@
+#
+# Local fully-containerized dev run. The backend intentionally runs with
+# QUARKUS_PROFILE=dev so DevDataSeeder creates demo data and dev-privateKey.pem/
+# dev-publicKey.pem are used for JWT (see application.properties) - a packaged jar
+# doesn't get Quarkus's dev-mode auto-generated ephemeral keypair, only `quarkus:dev`
+# does. Those .pem files are gitignored: run ./scripts/gen-dev-jwt-keys.sh once per
+# checkout before the first `docker compose up`, or login fails with SRJWT05021.
+# Real deployments should use the prod profile and supply JWT keys/secrets via env/volumes.
+#
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: logtrack
+      POSTGRES_DB: logtrack
+    ports:
+      - "55434:5432"
+    volumes:
+      - logtrack_backend_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.jvm
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      QUARKUS_PROFILE: dev
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://db:5432/logtrack
+      QUARKUS_DATASOURCE_USERNAME: postgres
+      QUARKUS_DATASOURCE_PASSWORD: logtrack
+      LOGTRACK_BACKEND_ORIGIN: http://localhost:8080
+      LOGTRACK_FRONTEND_URL: http://localhost:4200
+      LOGTRACK_CORS_ORIGINS: http://localhost:4200
+
+volumes:
+  logtrack_backend_db:

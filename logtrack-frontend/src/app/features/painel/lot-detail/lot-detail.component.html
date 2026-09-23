@@ -1,0 +1,44 @@
+@if (lot(); as lot) {
+  <app-back-link></app-back-link>
+  <app-page-title [title]="lot.codigo" [description]="lot.descricao || 'Sem descrição'">
+    @if (!lot.arquivado) {
+      <app-delete-lot-button [lot]="lot"></app-delete-lot-button>
+      <a class="button secondary" [routerLink]="['/lotes', lot.id, 'editar']">Editar lote</a>
+      <a class="button primary" [routerLink]="['/lotes', lot.id, 'gravar']"><svg lucideRadio [size]="18"></svg>{{ lot.tagGravada ? 'Regravar etiqueta' : 'Gravar etiqueta' }}</a>
+    }
+  </app-page-title>
+  @if (lot.arquivado) {
+    <div class="info-box">Lote excluído do estoque. Seu histórico continua disponível para consulta.</div>
+  }
+  <section class="panel detail-grid">
+    <div><span>{{ lot.arquivado ? 'Última zona registrada' : 'Zona atual' }}</span><strong>{{ lot.zonaAtualId | zoneName:data().zonas }}</strong></div>
+    <div><span>Quantidade</span><strong>{{ lot.quantidade !== null ? lot.quantidade.toLocaleString('pt-BR') : 'Não informada' }}</strong></div>
+    <div><span>Validade</span><strong [class]="'expiry ' + (lot.dataValidade | expiry)">{{ lot.dataValidade | datePtBr }}</strong></div>
+    <div><span>Cadastrado em</span><strong>{{ lot.criadoEm | datetime }}</strong></div>
+  </section>
+  <section class="panel">
+    <div class="panel-heading">
+      <div><h2>Histórico completo</h2><p>{{ movements().length }} movimentação(ões) registrada(s)</p></div>
+      <span class="badge blue">Auditoria</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Data e hora</th><th>Origem</th><th>Destino</th><th>Portal</th><th>Evento</th></tr></thead>
+        <tbody>
+          @for (m of movements(); track m.id) {
+            <tr>
+              <td>{{ m.timestamp | datetime }}</td>
+              <td>{{ m.zonaOrigemId | zoneName:data().zonas }}</td>
+              <td>{{ m.zonaDestinoId | zoneName:data().zonas }}</td>
+              <td>{{ portalNome(m.portalId) }}</td>
+              <td><span [class]="'badge ' + (m.tipo === 'MOVIMENTO' ? 'green' : 'amber')">{{ m.tipo === 'MOVIMENTO' ? 'Movimentação' : 'Cancelamento' }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (!movements().length) { <app-empty-state>Sem Zona — aguardando primeira movimentação.</app-empty-state> }
+    </div>
+  </section>
+} @else {
+  <app-empty-state>Lote não encontrado. <a routerLink="/lotes">Voltar para lotes</a></app-empty-state>
+}

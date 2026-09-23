@@ -1,0 +1,19 @@
+<app-back-link></app-back-link>
+<app-page-title [title]="lot() ? 'Editar lote' : 'Novo lote'" description="Cadastre as informações do lote para acompanhar cada movimentação."></app-page-title>
+<form class="panel management-form" (submit)="submit($event)">
+  <div class="form-section-heading"><h2>Informações do lote</h2><p>O código identifica este lote em toda a operação.</p></div>
+  <label>Código do lote <span class="required">*</span><input name="codigo" [value]="lot()?.codigo" required maxlength="100" placeholder="Ex.: LT-2026-0006"/></label>
+  <label>Descrição<textarea name="descricao" [value]="lot()?.descricao || ''" maxlength="2000" rows="3" placeholder="Descreva o material ou as peças deste lote"></textarea></label>
+  <div class="form-row">
+    <label>Quantidade<input name="quantidade" type="number" min="0" max="2147483647" step="1" [value]="lot()?.quantidade ?? ''" placeholder="Ex.: 240"/></label>
+    <label>Data de validade<input name="dataValidade" type="date" [value]="dataValidadeValue()"/></label>
+  </div>
+  @if (!lot()) {
+    <div class="info-box"><svg lucideRadio [size]="21"></svg><span>O lote será criado como <strong>Sem Zona</strong>. A primeira leitura por uma estação define sua localização.</span></div>
+  }
+  @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+  <div class="form-actions">
+    <a routerLink="/lotes" class="button secondary">Cancelar</a>
+    <button class="button primary" [disabled]="busy()">{{ busy() ? 'Salvando...' : (lot() ? 'Salvar alterações' : 'Salvar e gerar URL') }}</button>
+  </div>
+</form>
