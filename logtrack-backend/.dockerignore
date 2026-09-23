@@ -3,3 +3,12 @@
 !target/*-runner.jar
 !target/lib/*
 !target/quarkus-app/*
+
+# Necessario pra Dockerfile.cloudrun (build-from-source no Cloud Build/Cloud Run) -
+# Dockerfile.jvm nao usa nada disso, so os target/* acima.
+!mvnw
+!pom.xml
+!.mvn
+!.mvn/**
+!src
+!src/**
